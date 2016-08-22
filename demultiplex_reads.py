@@ -1,12 +1,8 @@
 from __future__ import print_function
 import os
 import sys
-import socket
 try:
-    hostname = socket.gethostname()
-    if 'ccbr' in hostname or 'beagle' in hostname:
-        sys.path.append('/home/kimlab2/ccorbi/python-Levenshtein-0.12.0/\
-                        build/lib.linux-x86_64-2.7/')
+    sys.path.append('/home/kimlab2/ccorbi/python-Levenshtein-0.12.0/build/lib.linux-x86_64-2.7/')
 except:
     pass
 import pandas as pd
@@ -122,8 +118,13 @@ def identification_method(method='standard'):
                     'map': False,
                     'target_len': barcode.trgt_len}
         # get mismatch configuration
-        misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 1)
-        misreads_cutoff_cons = Kargs.get('misreads_cutoff_cons', 1)
+        # try:
+        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
+        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
+        # except KeyError:
+        #     # logger.info('Misreads configuration missing using defaults')
+        # misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 0)
+        # misreads_cutoff_cons = Kargs.get('misreads_cutoff_cons', 2)
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
@@ -170,8 +171,8 @@ def identification_method(method='standard'):
                     'map': False,
                     'target_len': barcode.trgt_len}
 
-        misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 1)
-        misreads_cutoff_cons = Kargs.get('misreads_cutoff_cons', 1)
+        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
+        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
@@ -238,7 +239,7 @@ def identification_method(method='standard'):
                     'map': False,
                     'target_len': barcode.trgt_len}
 
-        misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 1)
+        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
@@ -291,8 +292,8 @@ def identification_method(method='standard'):
                     'map': False,
                     'target_len': barcode.trgt_len}
 
-        misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 1)
-        misreads_cutoff_cons = Kargs.get('misreads_cutoff_cons', 1)
+        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
+        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
@@ -403,23 +404,22 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                 # Read 4 by 4
                 # ID lane info, seq info etc
                 # Read seq and Quality info
-                read1_seq = read1.next()
-                # Strand
-                read1.next()
-                read1_qual = read1.next()
+
+                read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
+
                 # For each barcode
                 for barcode in barcodes_list:
 
-                    read_split = identify_seq(read1_seq, barcode)
+                    read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
-                    if read_split['map']:
+                    if read_match_info['map']:
                         save_seq(read1_id, read1_seq, read1_qual,
-                                 barcode, read_split, out_dir)
+                                 barcode, read_match_info, out_dir)
                     if dump:
                         pass
                     if save_frequencies:
                         # save
-                        gbl_stats = write_freqs(read_split, barcode, gbl_stats)
+                        gbl_stats = write_freqs(read_match_info, barcode, gbl_stats)
                         pass
     # close
     if save_frequencies:
@@ -644,9 +644,9 @@ def get_options():
                         """)
     # Default 1
     parser.add_argument('--misreads_cutoff_cons', action="store",
-                        dest="misreads_cutoff_cons", default=1, type=int,
+                        dest="misreads_cutoff_cons", default=2, type=int,
                         help='Max number of misreading allowed in the constant \
-                        constant_region (default 1)')
+                        constant_region (default 2)')
 
     parser.add_argument('--misreads_cutoff_barcode', action="store",
                         dest="misreads_cutoff_barcode", default=1, type=int,
@@ -695,7 +695,7 @@ def workflow(opts):
     logger.info('Barcode: {}'.format(opts.barcode_file))
     # logger.info('Target: {}'.format(opts.target_len))
 
-    logger.info('Misreadings_Barcode: {}'.format(opts.misreads_cutoff_cons))
+    logger.info('Misreadings_Barcode: {}'.format(opts.misreads_cutoff_barcode))
     logger.info('Misreadings_Constant: {}'.format(opts.misreads_cutoff_cons))
     logger.info('Stats: {}'.format(opts.save_frequencies))
 

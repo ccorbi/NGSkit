@@ -4,10 +4,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Barcode(object):
     """docstring for Barcode Class
 
     """
+
     def __init__(self, name, arg):
         """init barcodes. from a file.
 
@@ -97,23 +99,30 @@ def read(barcode_file):
                     name = data[0].strip()
                     # Forward-Barcode, Barcode-2-Reversed, Konstant_region1, Konstant_region2-Reversed
                     barcodes.append(Barcode(name, [data[1].strip(), data[2].strip(),
-                                                   data[3].strip(), data[4].strip(),
-                                                   data[5].strip()]))
+                                                   data[3].strip(), data[
+                        4].strip(),
+                        data[5].strip()]))
 
                     logger.info('BARCODE {} > b1:{} c1:{} c2:{} b1:{} target:{}'.format(name,
-                                                      data[1].strip(),
-                                                      data[2].strip(),
-                                                      data[3].strip(),
-                                                      data[4].strip(),
-                                                      data[5].strip()))
+                                                                                        data[
+                                                                                            1].strip(),
+                                                                                        data[
+                                                                                            2].strip(),
+                                                                                        data[
+                                                                                            3].strip(),
+                                                                                        data[
+                                                                                            4].strip(),
+                                                                                        data[5].strip()))
                 elif len(data) == 4:
                     barcodes.append(Barcode(name, [data[1].strip(), data[2].strip(),
                                                    '-', '-', data[3].strip()]))
 
                     logger.info('BARCODE {} > b1:{} c1:{} target:{}'.format(name,
-                                                      data[1].strip(),
-                                                      data[2].strip(),
-                                                      data[3].strip()))
+                                                                            data[
+                                                                                1].strip(),
+                                                                            data[
+                                                                                2].strip(),
+                                                                            data[3].strip()))
                 else:
                     print('''Barcode should contain at least:\n
                                Sample ID, Forward-Barcode, Constant_region 1\n
@@ -123,3 +132,43 @@ def read(barcode_file):
                     print(data)
 
     return barcodes
+
+
+if __name__ == '__main__':
+    # split barcodes files in individual files
+    # allow to submit each sample as a single job
+    # simple input
+    import pandas as pd
+    import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description="""
+    Barcodes tool
+
+    Usage :
+    %prog -b [BarCode_file.excel]  -o [to_demultiplex_]
+
+    """)
+
+    parser.add_argument('-b', '--barcode_file', action="store",
+                        dest="barcode_file", default=False, help='File that \
+                        contains barcodes and cosntant regions', required=True)
+
+    parser.add_argument('-o', '--out_prefix', action="store", dest="out_prefix",
+                        default='demultiplex', help='Output prefix name \
+                        to_demultiplex by default')
+
+    options = parser.parse_args()
+
+    excel_barcode = pd.read_excel(options.barcode_file, header=None)
+    # Output format
+    if options.out_prefix:
+        template_file_name = options.out_prefix
+    else:
+        template_file_name = 'to_demultiplex'
+    # for sample in the excel write a single barcode file to feed the demultiplexation
+    # script
+    for idx in range(excel_barcode.shape[0]):
+        excel_barcode.iloc[idx:idx + 1].to_csv('{}_{}.barcode'.format(template_file_name, idx),
+                                               index=False,
+                                               header=False, sep='\t')
