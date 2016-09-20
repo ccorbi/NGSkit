@@ -134,6 +134,19 @@ def read(barcode_file):
     return barcodes
 
 
+def validate(data):
+    """Validate presence of Nucleotides.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+
+    """
+
+    pass
+
 if __name__ == '__main__':
     # split barcodes files in individual files
     # allow to submit each sample as a single job

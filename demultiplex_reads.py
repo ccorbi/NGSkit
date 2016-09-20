@@ -1,16 +1,13 @@
 from __future__ import print_function
 import os
 import sys
-try:
-    sys.path.append('/home/kimlab2/ccorbi/python-Levenshtein-0.12.0/build/lib.linux-x86_64-2.7/')
-except:
-    pass
 import pandas as pd
 import Levenshtein as leven
 import logging
 import argparse
-import barcodes
 import time
+
+import barcodes
 
 
 def match(seq, target, cutoff):
@@ -400,27 +397,27 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     # Open Forward FastaQ file
     with open(inputfile, 'r') as read1:
 
-            for read1_id in read1:
-                # Read 4 by 4
-                # ID lane info, seq info etc
-                # Read seq and Quality info
+        for read1_id in read1:
+            # Read 4 by 4
+            # ID lane info, seq info etc
+            # Read seq and Quality info
 
-                read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
+            read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
 
-                # For each barcode
-                for barcode in barcodes_list:
+            # For each barcode
+            for barcode in barcodes_list:
 
-                    read_match_info = identify_seq(read1_seq, barcode, **Kargs)
+                read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
-                    if read_match_info['map']:
-                        save_seq(read1_id, read1_seq, read1_qual,
-                                 barcode, read_match_info, out_dir)
-                    if dump:
-                        pass
-                    if save_frequencies:
-                        # save
-                        gbl_stats = write_freqs(read_match_info, barcode, gbl_stats)
-                        pass
+                if read_match_info['map']:
+                    save_seq(read1_id, read1_seq, read1_qual,
+                             barcode, read_match_info, out_dir)
+                if dump:
+                    pass
+                if save_frequencies:
+                    # save
+                    gbl_stats = write_freqs(read_match_info, barcode, gbl_stats)
+                    pass
     # close
     if save_frequencies:
         # write file
@@ -716,7 +713,7 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(name)s - %(levelname)s - \
                                 %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename='run_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename='run_demultiplex_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
                         filemode='w')
     logger = logging.getLogger(__name__)
 

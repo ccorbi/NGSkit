@@ -1,83 +1,44 @@
+from __future__ import print_function
+from __future__ import division
 import os
 import sys
-import barcodes
-import logging
-import time
 import pandas as pd
+import Levenshtein as leven
+import logging
 import argparse
+import time
+
+import barcodes
+from utils import fasta_tools, fastq_tools
 
 
-def makeoutputdirs(barcode,out_path):
 
-    '''Helper function to create barcode output files if they not exist
+def trimming(demultiplexed_fastq, barcode, quality_threshold,
+            trgt_len, output_fmt, output_folder):
+    """Extract seq from the FASTAQ demultiplexed files. Trim barcodes + Constant
 
-    :param str barcode: barcode name
-    :param str output_path: Path of the output data, by default demultiplex'''
+    Parameters
+    ----------
+    demultiplexed_fastq : str
+        Path of the demultiplexed fastq file
+    barcode : barcode.object
+        Barcode object wiht info about barcode and constant regions
+    quality_threshold : int
+        reading quality Threshold, any sequence will be trimmed under that level
+    trgt_len : int
+        length in bases of the target sequences.
+    output_fmt :  str
+        Output format, by default fasta
+    working_folder : str
+        Output folder to save files with trimmed sequences
 
-    for sample_id in barcode:
-        #Make folders for each barcode
-        out_folder = os.path.join(out_path, sample_id).replace('\\', '/')
-        try:
-            os.makedirs(out_folder)
-        except OSError:
-            e = sys.exc_info()
-            #print 'Warning, Folder',out_folder,' already exist'
-            print 'Warning', e[1]
-    # Open Forward
-    return
-
-def read_fasta2dict(filename):
-
-    '''Helper function quickly read a fasta file into a dict [need improvement]
-
-    :param str filename: Fasta file path and name
-
-    :return: Dictionary header is key, sequence is the value
-    :rtype: dict '''
-
-    fasta_dic = dict()
-
-    with open(filename,'r') as input_file:
-        for line in input_file:
-            if line[0] == '>':
-                fasta_dic[line[1:].strip()] =''
-                last_id = line[1:].strip()
-            else:
-                fasta_dic[last_id] = line.strip()
-
-    return fasta_dic
+    Returns
+    -------
+    output format save fasta or fastq
 
 
-    def trim_all_(self,barcode_file,data_path,**Kargs):
-        '''
-        For each sample in the barcodes file, trim seq from the FASTAQ demultiplexed files
-        , right now, just remove the barcodes and filter by qualty and length
-
-        :param str barcode_file: file with the barcodes info to be transformed Dictionary with the barcodes
-        :param str data_path: demultiplexing folder '''
-
-        barcodes = read_barcodes(barcode_file)
-
-        for sample_id in barcodes:
-            # Get all the files in the sample folder
-            for demultiplex_file in os.listdir('./'+data_path+'/'+sample_id):
-
-#                output = demultiplex_file.strip()
-                raw_name = demultiplex_file.replace('_F.fastq','')
-                hit_len = raw_name.split('_')[-1:]
-                #print hit_len,sys.argv[3]
-                if hit_len[0]==self.peplength:
-                    print demultiplex_file
-                    path_dpx_file = './'+data_path+'/'+sample_id+'/'+demultiplex_file
-                    self.trim_naive(path_dpx_file,barcodes,sample_id,data_path,**Kargs)
-
-        return
-
-def trim_naive(self,demultiplexed_file,barcodes,sample_id,data_path,**Kargs):
-
-    '''Extract seq from the FASTAQ demultiplexed files,
-    remove barcodes and constant region
-    filter by quality
+    Notes
+    -----
 
     Result str, in Fasta format
     >FASTAQ_ID+ length + Quality
@@ -85,81 +46,58 @@ def trim_naive(self,demultiplexed_file,barcodes,sample_id,data_path,**Kargs):
     it will be storage:
     /data_path/Sequences/Sample_id.fasta
 
-    :param str demultiplexed_file: Path to the Fastq file demultiplexed
-    :param dict barcodes: barcodes info dictoniary
-    :param str sample_id: sample_id
-    :param str data_path: Folder name where is the demultiplexed info.
-    '''
-    # self.setup_cfg(**param)
 
+    """
+    # Init the output format, retunr a function
+    if output_fmt == 'fasta':
+        save_seq = fasta_tools.write_fasta_sequence
+        filehdl_output = open(output_folder+barcode.id+'.fasta','a')
+        logger.info('Output file: %s' % (output_folder+barcode.id+'.fasta'))
 
-    assert demultiplexed_file!=''
-    assert len(barcodes)>0
-    assert sample_id!=''
+    if output_fmt == 'fastq':
+        save_seq = fastq_tools.write_fastq_sequence
+        filehdl_output = open(output_folder+barcode.id+'.fastq','a')
+        logger.info('Output file: %s' % (output_folder+barcode.id+'.fastq'))
+    # check barcodes integrity, peplength, fastq
+    # barcodes_list = barcodes.read(barcode_file)
 
-    assert len(data_path) > 0
+    # Stats
+    nseqs = 0
+    ntrimed = 0
+    # Open Fastq file
+    with open(demultiplexed_fastq, 'r') as read1:
+        for read1_id in read1:
+            # Read 4 by 4
+            # ID lane info, seq info etc
+            # Read seq and Quality info
+            read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
+            #Translate the Quality to a list of Integers
+            qual = [ord(c)-33 for c in read1_qual.rstrip("\n")]
 
-    assert len(self.peplength) > 0
+            target_sequence = read1_seq[barcode.b1_len+barcode.c1_len:
+                                        barcode.b1_len+barcode.c1_len+trgt_len]
+            #remove the quality of the barcode and the constant region
+            target_qual = qual[barcode.b1_len+barcode.c1_len:
+                                        barcode.b1_len+barcode.c1_len+trgt_len]
+            nseqs += 1
+            # Control
+            avg_quality = sum(target_qual)/float(len(target_qual))
+            if len(target_sequence) == trgt_len and avg_quality >= quality_threshold:
 
-    chopp = Kargs.get('chopp')
-
-
-    F_cons = barcodes[sample_id][2]
-    S_cons = barcodes[sample_id][3]
-    barcode1 = barcodes[sample_id][0]
-#        barcode2 = barcodes[sample_id][1]
-
-    result = open("./%s/Sequences/%s.fasta" % (data_path,sample_id), "a")
-    no_complaint = 0
-    complaint = 0
-    with open(demultiplexed_file, 'r') as forward:
-        for forward_id in forward:
-
-            header_id = forward_id
-            header_id = str(forward_id.partition(' ')[0]).strip()
-            sequence, line3, quality = [next(forward) for _ in range(3)]
-
-            forward_id = forward_id.partition(' ')
-
-            #Translate the Quality to numbers
-            qual = [ord(c)-33 for c in quality.rstrip("\n")]
-
-            if chopp == 'peptide':
-                sequence = sequence[len(barcode1)+len(F_cons):int(self.peplength)+len(barcode1)+len(F_cons)]
-                #remove the quality of the barcode and the constant region
-                qual = qual[len(barcode1)+len(F_cons):int(self.peplength)+len(barcode1)+len(F_cons)]
-                lencutoff = int(self.peplength)
-
-            elif chopp == 'constant':
-                sequence = sequence[len(barcode1):int(self.peplength)+len(barcode1)+len(S_cons)+len(F_cons)]
-                #remove the quality of the barcode and the constant region
-                qual = qual[len(barcode1):int(self.peplength)+len(barcode1)+len(F_cons)+len(S_cons)]
-                lencutoff = int(self.peplength)+len(F_cons)+len(S_cons)
+                ntrimed += 1
+                # save output format
+                # attach Qavg to the id
+                seq_id = '{}_{}'.format(read1_id.strip(), avg_quality)
+                save_seq([seq_id, target_sequence, target_qual],
+                         file_output=filehdl_output)
+                # save
             else:
-                print 'Chopp method not defined'
-                raise KeyError
+                # Stats
+                pass
 
-
-
-
-            #split the remain seq in diff frames in order to find the reverse constant region
-            #Not always the seq has the 48bp, that why we use this method.
-
-            dseq_q = sum(qual)/float(len(qual))
-            if len(sequence) == lencutoff and dseq_q >= self.reading_quality_cutoff:
-
-                print >> result, ">"+header_id+"_F_"+str(len(sequence))+"_"+str(dseq_q)
-                print >> result, sequence
-                complaint +=1
-            else:
-                logger.info('{} {} {} '.format(header_id, dseq_q, sequence))
-                no_complaint +=1
-
-    logger.info('{} have been discarted of {} '.format(no_complaint,no_complaint+complaint))
-
-    return
-
-
+    logger.info('Read %i Sequences' % (nseqs))
+    logger.info('Trimmed %i Sequences' % (ntrimed))
+    filehdl_output.close()
 
 def get_options():
     """Get arguments from command line.
@@ -174,57 +112,40 @@ def get_options():
     parser = argparse.ArgumentParser(description="""
     Trimming Fastq sequences tool
 
-    Usage Demultiplexation:
-    %prog -b [BarCode_file.inp]  -i [deep_seq_file.fastq] -o [folder_name]\
-    -l 54 -m QUICK --misreads_cutoff_cons 2
+    Usage Trimming:
+    %prog -d [demultiplexed Folder]-b [BarCode_file.inp]  -q [Quality threshold]\
+    -m [method] --output_fmt fasta
 
     """)
 
-    parser.add_argument('-i', '--input_fastq', action="store",
-                        dest="input_fastq", default=False, help='input_fastq \
-                        FASTAQ (demultiplex)')
+    parser.add_argument('-d', '--input_folder', action="store",
+                        dest="input_folder", default=False, help='Folder \
+                        contains demultiplexed folders and files', required=True)
 
     parser.add_argument('-b', '--barcode_file', action="store",
                         dest="barcode_file", default=False, help='File that \
                         contains barcodes and cosntant regions', required=True)
 
-    parser.add_argument('-o', '--out_dir', action="store", dest="out_dir",
-                        default='demultiplex', help='Output folder, called \
-                        demultiplex by default')
+    parser.add_argument('-o', '--out_folder', action="store", dest="out_folder",
+                        default='Sequences', help='Output folder, called \
+                        Sequences by default')
 
     # optional Arguments
-    parser.add_argument('-m', '--demultiplexation_method', action="store",
-                        dest="dpx_method", default='standard', type=str,
-                        choices=['quick',
-                                 'standard',
-                                 'simple',
+    parser.add_argument('-m', '--trimming_method', action="store",
+                        dest="trimming_method", default='standard', type=str,
+                        choices=['standard',
                                  'float_window'],
-                        help="""Type of demultiplexation by default; STANDARD \n
-                        `quick`: Only the first barcode and constant region
-                        will be  check \n
-                        `standard`: Both barcodes and constant regions will be
-                         check\n
-                        `simple`: Only the barcodes are used \n
-                        `float_window`: frame shift search, Flexible search of\
-                        the second  constant region and barcode\n
-                        """)
+                        help="""                        """)
     # Default 1
-    parser.add_argument('--misreads_cutoff_cons', action="store",
-                        dest="misreads_cutoff_cons", default=1, type=int,
-                        help='Max number of misreading allowed in the constant \
-                        constant_region (default 1)')
+    parser.add_argument('-q', '--quality', action="store",
+                        dest="quality", default=30, type=int,
+                        help='Quality reading threshold \
+                         (default 30)')
 
-    parser.add_argument('--misreads_cutoff_barcode', action="store",
-                        dest="misreads_cutoff_barcode", default=1, type=int,
-                        help='Max number of misreading allowed in the constant \
-                        constant_region  (default 1)')
 
-    parser.add_argument('--dump', help='Dump constant regions', dest='dump',
-                        default=False, action='store_true')
+    parser.add_argument('--output_fmt', help='Output format, default fasta',
+                        dest='output_fmt', default='fasta', action='store')
 
-    parser.add_argument('--no-save_frequencies', help='Do not Save match \
-                        frequencies', dest='save_frequencies', default=True,
-                        action='store_false')
 
     options = parser.parse_args()
 
@@ -243,29 +164,52 @@ def workflow(opts):
     # Load Barcodes info
     # check barcodes integrity, peplength, fastq
     barcodes_list = barcodes.read(opts.barcode_file)
-
-
+    # make output folder
     # Init Logging
     logger.info('#### TRIMMING ####')
-    logger.info('Method: {}'.format(opts.dpx_method))
-    # logger.info('FastQ: {}'.format(opts.input_fastq))
-    logger.info('Barcode: {}'.format(opts.barcode_file))
-    # logger.info('Target: {}'.format(opts.target_len))
+    logger.info('Method: {}'.format(opts.trimming_method))
+    logger.info('Quality threshold: {}'.format(opts.quality))
+    logger.info('Output format: {}'.format(opts.output_fmt))
+    #
+    logger.info('Barcode file: {}'.format(opts.barcode_file))
+    logger.info('Input folder: {}'.format(opts.input_folder))
+    output_folder = opts.input_folder+'/'+opts.out_folder+'/'
+    logger.info('Output folder: {}'.format(output_folder))
 
-    # logger.info('Misreadings_Barcode: {}'.format(opts.misreads_cutoff_cons))
-    # logger.info('Misreadings_Constant: {}'.format(opts.misreads_cutoff_cons))
-    # logger.info('Stats: {}'.format(opts.save_frequencies))
-
-                                                                        ,opts.phredcutoff))
+    # Create output folder
     try:
-        os.makedirs(opts.data_path+'/Sequences/')
+        # by default Sequences
+        os.makedirs(output_folder)
     except OSError:
         e = sys.exc_info()
         #print 'Warning, Folder',out_folder,' already exist'
-        print 'Warning', e[1]
+        print('Warning  {}'.format(e[1]))
 
+    # foreach sample in barcodes
     for barcode in barcodes_list:
-        trim(barcode, **opts.__dict__)
+        logger.info('Triming Sample: {}'.format(barcode.id))
+        # folder must == sample id in the barcode
+        working_folder = './'+opts.input_folder+'/'+barcode.id+'/'
+        # get all fastq under the folder
+        for demultiplexed_fastq in os.listdir(working_folder):
+            # ToDO: only get fastq files
+            #ToDo: only those I want (target lenthg)
+            # if method is dynamic, get all the files in the folder
+            if opts.trimming_method == 'dynamic':
+                # To do
+                # raw_name = demultiplexed_file.replace('_F.fastq','')
+                # read the length from the file
+                pass
+            else:
+                logger.info('Triming file: {}'.format(demultiplexed_fastq))
+                # Trim time
+                dir_emultiplexed_fastq = working_folder+demultiplexed_fastq
+                trimming(dir_emultiplexed_fastq,
+                        barcode,
+                        quality_threshold= opts.quality,
+                        trgt_len= barcode.trgt_len,
+                        output_fmt= opts.output_fmt,
+                        output_folder=output_folder)
 
     return
 
@@ -280,7 +224,7 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(name)s - %(levelname)s - \
                                 %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename='run_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename='run_triming_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
                         filemode='w')
     logger = logging.getLogger(__name__)
 
