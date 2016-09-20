@@ -428,7 +428,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
 
 
 def save_seq(read1_id, read1_seq, read1_qual, barcode, read, out_dir):
-    """Save sequences in a Fastq file.
+    """Save sequences in a Fastq file. ToDO: use fastq_tools to improve I/O 
 
     Parameters
     ----------
