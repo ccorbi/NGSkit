@@ -14,7 +14,6 @@ from __future__ import division
 import bisect
 import re
 import random
-import numpy as np
 import operator
 import functools
 
@@ -30,7 +29,9 @@ def translate2aa(nseq, start=1):
         :param str nseq: Nucleotide sequence
         :param int start: Start to translate from the position, by default 1
 
-        :return: str with the aminoacid sequence.
+    Returns
+    -------
+     str with the aminoacid sequence.
 
 
     """
@@ -85,7 +86,7 @@ def translate2na(seq, specie='human'):
 
 
 def codon_weighted_random_choice(codons, specie):
-    """Returns a random element from a list. The probability for each element
+    """Returns a  element from a list. The probability for each element
     elem in list to be selected is weighted by weight(elem).
     weight_dictionary`` must be a callable accepting one argument, and returning a
     non-negative number. If ``weight(elem)`` is zero, ``elem`` will not be
@@ -94,22 +95,31 @@ def codon_weighted_random_choice(codons, specie):
     Parameters
     ----------
 
-        :param codons (list): must be an iterable containing more than one element.
-        :param specie (str): Codon usage specie, human, e.coli, etc.
+    codons : array_like
+        must be an iterable containing more than one element.
+
+    specie : str
+        Codon usage specie, human, e.coli, etc.
 
 
 
     Return:
     -------
-
-        codon (str)
+    str
+        codon base on codon usage probability
 
     Raises
     ------
-
+    ValueError
+        If the codon usage library is not valid
 
     """
-    weight_dictionary = USAGE_FREQ.get(specie)
+    try:
+        weight_dictionary = USAGE_FREQ.get(specie)
+    except ValueError:
+        # may be this could be a warning, and call human codon usage
+        raise ValueError('{} is not a valid specie'.format(specie))
+
     weights = 0
     elems = []
     for elem in codons:
@@ -265,15 +275,15 @@ def has_restriction_sites(seq, dict_restriction):
 
 
 def code_4_any(seq, filter_codons=STOP_CODONS):
-    """Return True if the sequences contain any of the filter_codons.
+    """Return True if the sequences contain any of the codons in filter_codons.
 
     Parameters
     ----------
     seq : str
         sequence to check, in the right frame shift
 
-    filter_codons : list
-        iterable with the codons to test (default stop codons)
+    filter_codons : array_like
+        iterable with the codons to test (by default stop codons)
 
     Returns
     -------
@@ -307,7 +317,7 @@ def is_bias_on(seq, filter_by=A2C_NNS_DICT):
     -------
 
     """
-    filter_codons = get_codons_from(filter_by)
+    filter_codons = _get_codons_from(filter_by)
 
     reading_frame = len(seq) / 3
     jdx = 0
@@ -322,33 +332,21 @@ def is_bias_on(seq, filter_by=A2C_NNS_DICT):
     return True
 
 
-
-
-def get_codons_from(codons_dict):
-    """Extract all codons from dictionary in a single list.
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    """
-    all_codons = list()
-    for  codons_list in codons_dict.values():
-        all_codons.extend(codons_list)
-
-    return all_codons
-
-
 def possible_encondings(seq, codons_base=A2C_NNS_DICT):
     """Return the number of possible combinations of nucleotides to encode a AA seq.
 
     Parameters
     ----------
+    seq : str
+       Amino acid sequence
+
+    codons_base : dict
+        Dictionary with the codons list for each aminoacid, by default NNS
 
     Returns
     -------
+    int
+       The number of different Nucleotide sequence that may encode the input seq
 
     """
 
@@ -358,3 +356,23 @@ def possible_encondings(seq, codons_base=A2C_NNS_DICT):
         n.append(len(codons_base[a]))
 
     return functools.reduce(operator.mul,n)
+
+
+def _get_codons_from(codons_dict):
+    """Extract all codons from dictionary in a single list.
+
+    Parameters
+    ----------
+    codons_dict : dict
+
+    Returns
+    -------
+    list
+
+
+    """
+    all_codons = list()
+    for  codons_list in codons_dict.values():
+        all_codons.extend(codons_list)
+
+    return all_codons
