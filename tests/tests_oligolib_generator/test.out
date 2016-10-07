@@ -1,0 +1,462 @@
+============================= test session starts ==============================
+platform linux -- Python 3.5.2, pytest-2.9.2, py-1.4.31, pluggy-0.3.1
+rootdir: /home/ccorbi/Work/Beagle/KIMlab_CODE/NGSKit/NGSKit/tests/tests_oligolib_generator, inifile: 
+collected 14 items
+
+test_oligolib_generator.py F....FFFFFFF.F
+
+=================================== FAILURES ===================================
+__________________________ test_lib_default_creation ___________________________
+
+    def test_lib_default_creation():
+        """Create default library"""
+        test_lib = olg.peptide_library('AAAA')
+    
+        assert test_lib.lib_name == 'AAAA'
+        assert test_lib.specie == 'human'
+        assert test_lib.include_template_in
+        assert len(test_lib) == 1
+>       assert test_lib._aalibrary['AAAAA'] == 'AAAAA_OO_0'
+E       KeyError: 'AAAAA'
+
+test_oligolib_generator.py:15: KeyError
+_____________________________ test_change_template _____________________________
+
+    def test_change_template():
+    
+        test_lib = olg.peptide_library('AAAA')
+        test_lib.load_designs('./test_file.inp')
+        test_lib.change_template('CCC')
+>       assert test_lib.template == 'CCC'
+E       assert <NGSKit.oligolib_generator.Template object at 0x7ff69a873c18> == 'CCC'
+E        +  where <NGSKit.oligolib_generator.Template object at 0x7ff69a873c18> = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69a8735f8>.template
+
+test_oligolib_generator.py:92: AssertionError
+__________________________ test_simple_var_generation __________________________
+
+    def test_simple_var_generation():
+        # test_lib generation of all simple variants
+        # by default option
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants()
+
+test_oligolib_generator.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69a8f6128>
+kwargs = {}, positions = range(0, 3), suffix = '_SV_', eachposition = 0
+itera = ['A', 'C', 'C'], a = 'ACC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+___________________________ test_bias_var_generation ___________________________
+
+    def test_bias_var_generation():
+        # test_lib generation of all variant with exclusion variant
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants(bias=['A'])
+
+test_oligolib_generator.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69a896da0>
+kwargs = {'bias': ['A']}, positions = range(0, 3), suffix = '_SV_'
+eachposition = 0, itera = ['D', 'C', 'C'], a = 'DCC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+___________________ test_restrict_double_bias_var_generation ___________________
+
+    def test_restrict_double_bias_var_generation():
+        # test_lib generation of all variant with restriction variants
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants(bias=['G', 'C'], bias_type='restrict')
+
+test_oligolib_generator.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69a64d278>
+kwargs = {'bias': ['G'], 'bias_type': 'restrict'}, positions = range(0, 3)
+suffix = '_SV_', eachposition = 0, itera = ['G', 'C', 'C'], a = 'GCC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+_______________________ test_double_bias_var_generation ________________________
+
+    def test_double_bias_var_generation():
+        # test_lib generation of all variant with exclusion variant more than one
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants(bias=['A', 'G'])
+
+test_oligolib_generator.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69a88d7b8>
+kwargs = {'bias': ['A', 'G']}, positions = range(0, 3), suffix = '_SV_'
+eachposition = 0, itera = ['D', 'C', 'C'], a = 'DCC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+_____________________________ test_writing_options _____________________________
+
+    def test_writing_options():
+        # Test writing
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants(bias=['A', 'G'])
+
+test_oligolib_generator.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69e205f98>
+kwargs = {'bias': ['A', 'G']}, positions = range(0, 3), suffix = '_SV_'
+eachposition = 0, itera = ['D', 'C', 'C'], a = 'DCC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+_______________________________ test_random_trim _______________________________
+
+    def test_random_trim():
+        # Test random removing
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+>       test_lib.generate_single_variants(bias=['A', 'G'])
+
+test_oligolib_generator.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69b9884a8>
+kwargs = {'bias': ['A', 'G']}, positions = range(0, 3), suffix = '_SV_'
+eachposition = 0, itera = ['D', 'C', 'C'], a = 'DCC'
+
+    def generate_single_variants(self, **kwargs):
+        """From a sequence (string), return a dictionary of single muntatns.
+    
+            Parameters
+            ----------
+                :param positions : List of position to be modified
+                :rtype: list
+    
+                :param inrange: [start,end] coordinates inside the seq by default full length
+    
+                :param bias: ['A','W'] aminoacids excluded or restrict
+                :rtype list
+    
+                :param bias_type: how to handle the bias AA,  exclude or restrict , by default exclude
+                :rtype str
+    
+            Returns
+            -------
+    
+            Raises
+            ------
+    
+    
+            """
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+    
+        # t = self.template
+        # if postions is not given use the entire lenght of the template
+        positions = kwargs.get('positions', range(self.template.len_))
+    
+        # Add suffix to this peptides, by default _SV_ SingleVariant
+        suffix =  kwargs.get('suffix', '_SV_')
+    
+        for eachposition in positions:
+    
+            for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
+    
+                a = ''.join(itera)
+                if a in self._aalibrary:
+                    pass
+                else:
+                    # check library limit
+    
+                    if self.lib_limit and index_id >= self.lib_limit:
+                        print('WARNING!: Library limit reached -{}-'.format(self.lib_limit))
+                        return
+    
+>                   index_id += 1
+E                   UnboundLocalError: local variable 'index_id' referenced before assignment
+
+../../oligolib_generator.py:381: UnboundLocalError
+________________________________ test_load_json ________________________________
+
+    def test_load_json():
+        test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
+                                       CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    
+    
+        # test_lib json generation permutations
+    
+        test_lib.permutations_json('test_permutations_cfg.json')
+>       assert len(test_lib._aalibrary) == 6
+E       assert 0 == 6
+E        +  where 0 = len({})
+E        +    where {} = <NGSKit.oligolib_generator.peptide_library object at 0x7ff69b964358>._aalibrary
+
+test_oligolib_generator.py:208: AssertionError
+----------------------------- Captured stdout call -----------------------------
+WARNING!: Library limit reached -False-
+====================== 9 failed, 5 passed in 0.28 seconds ======================
