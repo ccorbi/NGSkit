@@ -34,7 +34,9 @@ def test_lib_creation_from_a_file():
     # test_lib to load designs and add restriction enzymes
     test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
                                    CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
-    test_lib.load_designs('./test_file.inp')
+
+    fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
+    test_lib.load_designs(fname)
     assert len(test_lib) == 2
     assert test_lib._aalibrary['AAC']
     assert test_lib._aalibrary['AAI']
@@ -44,7 +46,9 @@ def test_add_restriction_enzymes():
 
     test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
                                    CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
-    test_lib.load_designs('./test_file.inp')
+
+    fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
+    test_lib.load_designs(fname)
 
     test_lib.add_restriction_enzyme(['GCTGCC', 'GCAGCT'])
     test_lib.add_restriction_enzyme({'free': 'GCAGCG'})
@@ -56,7 +60,9 @@ def test_write_library():
     # create a lib from a file
     test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
                                    CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
-    test_lib.load_designs('./test_file.inp')
+
+    fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
+    test_lib.load_designs(fname)
     # add restriction enzymes
     test_lib.add_restriction_enzyme(['GCTGCC', 'GCAGCT'])
     test_lib.add_restriction_enzyme({'free': 'GCAGCG'})
@@ -87,7 +93,9 @@ def test_write_library():
 def test_change_template():
 
     test_lib = olg.peptide_library('AAAA')
-    test_lib.load_designs('./test_file.inp')
+
+    fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
+    test_lib.load_designs(fname)
     test_lib.change_template('CCC')
     assert test_lib.template.seq == 'CCC'
 
@@ -203,8 +211,8 @@ def test_load_json():
 
 
     # test_lib json generation permutations
-
-    test_lib.permutations_json('test_permutations_cfg.json')
+    fname = os.path.join(os.path.dirname(__file__), 'test_permutations_cfg.json')
+    test_lib.permutations_json(fname)
     assert len(test_lib._aalibrary) == 6
     test_lib.write()
     assert os.path.isfile('test-lib.fasta')
