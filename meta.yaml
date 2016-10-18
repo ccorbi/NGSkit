@@ -1,0 +1,25 @@
+package:
+  name: NGSKit
+  version: "0.0.1"
+
+source:
+  git_rev: "0.0.1"
+  git_url: https://github.com/kimlaborg/NGSKit
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - python-levenshtein
+
+  run:
+    - python
+
+test:
+  imports:
+    -
+
+about:
+  home:
+  license:
+  license_file:
