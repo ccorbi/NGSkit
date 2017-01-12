@@ -8,6 +8,6 @@ setup(
     url = "http://kimlab.org",
     description = ("Small kit of Tools for NGS data"),
 
-    packages=[x for x in find_packages()],
+
 
 )
