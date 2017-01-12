@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from NGSKit import oligolib_generator as olg
+from ngskit import oligolib_generator as olg
 
 
 def test_lib_default_creation():

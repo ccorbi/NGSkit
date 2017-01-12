@@ -1,5 +1,5 @@
 package:
-  name: NGSKit
+  name: ngskit
   version: "0.0.1"
 
 source:
@@ -17,7 +17,7 @@ requirements:
 
 test:
   imports:
-    -
+    - ngskit
 
 about:
   home:

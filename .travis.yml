@@ -1,7 +1,7 @@
 lenguage: python
 env:
   global:
-    - PKG_NAME="NGSKit"
+    - PKG_NAME="ngskit"
 
 python:
   - "2.7"
@@ -15,7 +15,7 @@ install:
 
 script:
 
-  - coverage run --source=NGSKit setup.py test
+  - coverage run --source=ngskit setup.py test
 
 after_success:
   - coveralls

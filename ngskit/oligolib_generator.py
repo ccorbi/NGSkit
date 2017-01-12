@@ -50,7 +50,7 @@ import logging
 import argparse
 import time
 
-from NGSKit.utils.dna import (translate2aa, translate2na, clean_restriction_sites)
+from ngskit.utils.dna import (translate2aa, translate2na, clean_restriction_sites)
 
 
 class peptide_library(object):
