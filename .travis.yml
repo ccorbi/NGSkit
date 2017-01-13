@@ -16,7 +16,7 @@ install:
 
 script:
 
-  - coverage run --source=ngskit setup.py test
+  - pytest
 
 after_success:
   - coveralls
