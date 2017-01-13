@@ -7,7 +7,7 @@ setup(
     author_email='carles.corbi@kimlab.org',
     url = "http://kimlab.org",
     description = ("Small kit of Tools for NGS data"),
-    packages=['ngskit','tests']
+    packages=['ngskit','ngskit.utils','tests']
 
 
 
