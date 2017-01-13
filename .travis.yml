@@ -11,7 +11,8 @@ install:
   - pip install --user pytest pytest-cov
   - pip install --user coveralls
   - pip install --user python-levenshtein
-  - python setup.py -q install
+  - pip install --user setuptools
+  - pip install .
 
 script:
 
