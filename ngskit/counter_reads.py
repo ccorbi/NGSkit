@@ -1,8 +1,8 @@
 from __future__ import print_function
-from dna_util import translate2aa
 import argparse
-
 import operator
+
+from ngskit.utils.dna import translate2aa
 
 __author__ = "C. corbi-Verge"
 __email__ = "carles.corbi@gmail.com"

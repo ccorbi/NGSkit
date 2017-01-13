@@ -2,14 +2,12 @@ from __future__ import print_function
 from __future__ import division
 import os
 import sys
-import pandas as pd
-import Levenshtein as leven
 import logging
 import argparse
 import time
 
-import barcodes
-from utils import fasta_tools, fastq_tools
+from ngskit import barcodes
+from ngskit.utils import fasta_tools, fastq_tools
 
 
 
