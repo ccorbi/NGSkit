@@ -422,7 +422,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     if save_frequencies:
         # write file
         time_stamp = time.ctime()
-        gbl_stats.to_csv(out_dir + '_'+ Kargs['barcode_file'] +'_stats_{4}_{1}_{2}_{0}_{3}.csv'.format(*time_stamp.split()))
+        gbl_stats.to_csv('Stats_'+ out_dir + '_'+ Kargs['barcode_file'] +'_{4}_{1}_{2}_{0}_{3}.csv'.format(*time_stamp.split()))
 
     return
 
@@ -712,7 +712,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename= 'Demultiplex_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename= 'Demultiplex_'+opts.input_folder+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
                         filemode='w')
     logger = logging.getLogger(__name__)
 
