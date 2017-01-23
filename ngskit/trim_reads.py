@@ -6,8 +6,8 @@ import logging
 import argparse
 import time
 
-from ngskit import barcodes
-from ngskit.utils import fasta_tools, fastq_tools
+import barcodes
+from utils import fasta_tools, fastq_tools
 
 
 
