@@ -16,7 +16,7 @@ def match(seq, target, cutoff):
     Parameters
     ----------
     seq : str
-        Nucleotide Sequence trimed from the fastaq file .
+        Nucleotide Sequence trimed from the fastq file .
     target : str
         Template to compare, barcode or constant region.
     cutoff : str
@@ -49,7 +49,7 @@ def count_mismatches(seq, target):
     Parameters
     ----------
     seq : str
-        Nucleotide Sequence trimed from the fastaq file .
+        Nucleotide Sequence trimed from the fastq file .
     target : str
         Template to compare, barcode or constant region.
 
@@ -422,7 +422,9 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     if save_frequencies:
         # write file
         time_stamp = time.ctime()
-        gbl_stats.to_csv('Stats_'+ out_dir + '_'+ Kargs['barcode_file'] +'_{4}_{1}_{2}_{0}_{3}.csv'.format(*time_stamp.split()))
+        fastq_file_name = os.path.basename(inputfile)
+
+        gbl_stats.to_csv('Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] +'_{4}_{1}_{2}_{0}_{3}.csv'.format(*time_stamp.split()))
 
     return
 
@@ -611,9 +613,9 @@ def get_options():
     #                     default=False, help='Lengh of the designed oligo',
     #                     required=True)
 
-    parser.add_argument('-i', '--input_fastq', action="store",
-                        dest="input_fastq", default=False, help='input_fastq \
-                        FASTAQ (demultiplex)', required=True)
+    parser.add_argument('-i', '--input_fastqs', nargs='+',
+                        dest="input_fastqs", default=False, help='input_fastqs \
+                        FASTQ file or files (demultiplex)', required=True)
 
     parser.add_argument('-b', '--barcode_file', action="store",
                         dest="barcode_file", default=False, help='File that \
@@ -673,12 +675,16 @@ def workflow(opts):
     """
     # Check inputs
     # FASTAQ
-    fastaq = opts.input_fastq
-    try:
-        os.path.isfile(fastaq)
-    except:
-        raise ValueError('FastQ input {} do not exist'.format(fastaq))
+    fastqs = opts.input_fastqs
+    for fastq in fastqs:
+        try:
+            os.path.isfile(fastq)
+        except:
+            raise ValueError('FastQ input {} do not exist'.format(fastq))
 
+    unique = set(fastqs)
+    if len(unique) != len(fastqs):
+        raise ValueError('duplicate input files')
     # Load Barcodes info
     # check barcodes integrity, peplength, fastq
     barcodes_list = barcodes.read(opts.barcode_file)
@@ -688,7 +694,7 @@ def workflow(opts):
     # Init Logging
     logger.info('#### DEMULTIPLEXING ####')
     logger.info('Method: {}'.format(opts.dpx_method))
-    logger.info('FastQ: {}'.format(opts.input_fastq))
+    logger.info('FastQ: {}'.format(opts.input_fastqs))
     logger.info('Barcode: {}'.format(opts.barcode_file))
     # logger.info('Target: {}'.format(opts.target_len))
 
@@ -698,7 +704,10 @@ def workflow(opts):
 
     # Call to the action
     # To do,: Allow pair end reads.
-    single_end(fastaq, barcodes_list, **opts.__dict__)
+    for fastq in fastqs:
+        logger.info('working on: %s',fastq )
+        single_end(fastq, barcodes_list, **opts.__dict__)
+        logger.info('next...' )
 
     return
 
