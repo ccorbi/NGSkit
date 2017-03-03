@@ -10,6 +10,19 @@ import barcodes
 from utils import fasta_tools, fastq_tools
 
 
+def create_folder(output_folder):
+    # Create output folder
+    logger.info('Open folder %s', output_folder)
+    try:
+        # by default Sequences
+        os.makedirs(output_folder)
+
+    except OSError:
+        _ = sys.exc_info()
+        logger.warning('Warning, Folder %s already exist', output_folder)
+
+    return
+
 
 def trimming(demultiplexed_fastq, barcode, quality_threshold,
             trgt_len, output_fmt, output_folder):
@@ -47,15 +60,17 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
 
     """
     # Init the output format, retunr a function
+    create_folder(output_folder)
+    #
     if output_fmt == 'fasta':
         save_seq = fasta_tools.write_fasta_sequence
-        filehdl_output = open(output_folder+barcode.id+'.fasta','a')
-        logger.info('Output file: %s' % (output_folder+barcode.id+'.fasta'))
+        filehdl_output = open(output_folder+'/'+barcode.id+'.fasta','a')
+        logger.info('Output file: %s' % (output_folder+'/'+barcode.id+'.fasta'))
 
     if output_fmt == 'fastq':
         save_seq = fastq_tools.write_fastq_sequence
-        filehdl_output = open(output_folder+barcode.id+'.fastq','a')
-        logger.info('Output file: %s' % (output_folder+barcode.id+'.fastq'))
+        filehdl_output = open(output_folder+'/'+barcode.id+'.fastq','a')
+        logger.info('Output file: %s' % (output_folder+'/'+barcode.id+'.fastq'))
     # check barcodes integrity, peplength, fastq
     # barcodes_list = barcodes.read(barcode_file)
 
@@ -97,6 +112,15 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
     logger.info('Trimmed %i Sequences' % (ntrimed))
     filehdl_output.close()
 
+
+def get_length_label(demultiplexed_fastq_file):
+
+    filename, _ = os.path.splitext(demultiplexed_fastq_file)
+    seq_lenght = filename.split('_')[-2:-1]
+    logger.info("Label lenght: %s", seq_lenght[0])
+    return int(seq_lenght[0])
+
+
 def get_options():
     """Get arguments from command line.
 
@@ -132,8 +156,9 @@ def get_options():
     parser.add_argument('-m', '--trimming_method', action="store",
                         dest="trimming_method", default='standard', type=str,
                         choices=['standard',
-                                 'float_window'],
-                        help="""                        """)
+                                 'dynamic_target'],
+                        help="""standard Trimm sequences according barcode file configuration, ignores float window output files\n
+                                dynamic  Trimm sequences using file lenght label, or output of float window demultiplex """)
     # Default 1
     parser.add_argument('-q', '--quality', action="store",
                         dest="quality", default=30, type=int,
@@ -143,6 +168,12 @@ def get_options():
 
     parser.add_argument('--output_fmt', help='Output format, default fasta',
                         dest='output_fmt', default='fasta', action='store')
+
+
+    parser.add_argument('--force-lenght', help='force a lenght and ignore file label, overwrites dynamic option',
+                        dest='force_lenght', default=False, action='store')
+
+
 
 
     options = parser.parse_args()
@@ -165,23 +196,19 @@ def workflow(opts):
     # make output folder
     # Init Logging
     logger.info('#### TRIMMING ####')
+    # incompatible
+
+
     logger.info('Method: {}'.format(opts.trimming_method))
     logger.info('Quality threshold: {}'.format(opts.quality))
     logger.info('Output format: {}'.format(opts.output_fmt))
     #
     logger.info('Barcode file: {}'.format(opts.barcode_file))
     logger.info('Input folder: {}'.format(opts.input_folder))
-    output_folder = opts.input_folder+'/'+opts.out_folder+'/'
+    output_folder = opts.input_folder+'/'+opts.out_folder
     logger.info('Output folder: {}'.format(output_folder))
+    logger.info('Force target lenght: %s',  opts.force_lenght)
 
-    # Create output folder
-    try:
-        # by default Sequences
-        os.makedirs(output_folder)
-    except OSError:
-        e = sys.exc_info()
-        #print 'Warning, Folder',out_folder,' already exist'
-        print('Warning  {}'.format(e[1]))
 
     # foreach sample in barcodes
     for barcode in barcodes_list:
@@ -193,22 +220,50 @@ def workflow(opts):
             # ToDO: only get fastq files
             #ToDo: only those I want (target lenthg)
             # if method is dynamic, get all the files in the folder
-            if opts.trimming_method == 'dynamic':
+            if opts.trimming_method == 'dynamic_target':
                 # To do
-                # raw_name = demultiplexed_file.replace('_F.fastq','')
-                # read the length from the file
-                pass
-            else:
-                logger.info('Triming file: {}'.format(demultiplexed_fastq))
-                # Trim time
+                # read lenght from the filename
+                seq_length = get_length_label(demultiplexed_fastq)
+                # modifiy target size
+
+                # modify output folder
                 dir_emultiplexed_fastq = working_folder+demultiplexed_fastq
                 trimming(dir_emultiplexed_fastq,
                         barcode,
                         quality_threshold= opts.quality,
-                        trgt_len= barcode.trgt_len,
+                        trgt_len= seq_length,
                         output_fmt= opts.output_fmt,
-                        output_folder=output_folder)
+                        output_folder=output_folder+'_'+str(seq_length))
+                # raw_name = demultiplexed_file.replace('_F.fastq','')
+                # read the length from the file
+                pass
 
+            elif opts.trimming_method == 'standard':
+
+                # Trim time
+                dir_emultiplexed_fastq = working_folder+demultiplexed_fastq
+                # ignore files from dynamic target
+                seq_length = get_length_label(demultiplexed_fastq)
+                if seq_length != barcode.trgt_len:
+                    logger.info("file label and barcode lenght are different:  %s SKIPPING FILE", demultiplexed_fastq)
+                    continue
+
+                else:
+
+                    logger.info('Triming file: {}'.format(demultiplexed_fastq))
+                    trimming(dir_emultiplexed_fastq,
+                            barcode,
+                            quality_threshold= opts.quality,
+                            trgt_len= barcode.trgt_len,
+                            output_fmt= opts.output_fmt,
+                            output_folder=output_folder)
+
+            elif opts.trimming_method == 'force':
+                # Todo: this option can be useful in the future
+                continue
+            else:
+                #  unknow method
+                pass
     return
 
 

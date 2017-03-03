@@ -73,7 +73,7 @@ def identification_method(method='standard'):
         `standard` (default) sequence match both barcodes and constant regions
         `quick` sequence match barcode and constant  region 1
         `simple` sequences with both barcodes
-        `float_window` like `standard` but insertions and deletions in target
+        `dynamic_target` like `standard` but insertions and deletions in target
          sequence are allowed
 
     Returns
@@ -256,7 +256,7 @@ def identification_method(method='standard'):
 
         return read_map
 
-    def float_window(read_seq, barcode, over_end=10, **Kargs):
+    def dynamic_target(read_seq, barcode, over_end=10, **Kargs):
         """if Forward and reverse Barcodes and constant regions  are in the seq.
         deletions or insertions in the target sequences are allowed.
 
@@ -351,8 +351,8 @@ def identification_method(method='standard'):
         return standard
     elif method == 'simple':
         return simple
-    elif method == 'float_window':
-        return float_window
+    elif method == 'dynamic_target':
+        return dynamic_target
     else:
         raise ValueError('Method {} do not exist'.format(method))
 
@@ -631,14 +631,14 @@ def get_options():
                         choices=['quick',
                                  'standard',
                                  'simple',
-                                 'float_window'],
+                                 'dynamic_target'],
                         help="""Type of demultiplexation by default; STANDARD \n
                         `quick`: Only the first barcode and constant region
                         will be  check \n
                         `standard`: Both barcodes and constant regions will be
                          check\n
                         `simple`: Only the barcodes are used \n
-                        `float_window`: frame shift search, Flexible search of\
+                        `dynamic_target`: frame shift search, Flexible search of\
                         the second  constant region and barcode\n
                         """)
     # Default 1
