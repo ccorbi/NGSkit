@@ -3,6 +3,7 @@ import argparse
 import operator
 
 from ngskit.utils.dna import translate2aa
+from ngskit.utils.fasta_tools import write_fasta_sequence
 
 __author__ = "C. corbi-Verge"
 __email__ = "carles.corbi@gmail.com"
@@ -41,7 +42,13 @@ def count_seqs_aa(filename, seqs=dict()):
             if line.startswith('>'):
                 pass
             else:
-                aa = translate2aa(line.strip())
+                try:
+                    aa = translate2aa(line.strip())
+
+                except KeyError:
+                    # so far ignore it found a N
+                    # on the future add fuzzy logic to add read to a sequence
+                    continue
 
                 seqs[aa] = seqs.get(aa, 0) + 1
                 # print >> fasta_2_logo,translate2aa(line.strip())
@@ -64,51 +71,62 @@ def get_options():
 
     parser.add_argument('-p', help='Translate Oligos to Aminoacids and count',
                         dest='protein', default=False, action='store_true')
-
-    parser.add_argument('-n', help='Count oligos', dest='dna', default=False,
-                        action='store_true')
+    #
+    # parser.add_argument('-n', help='Count oligos', dest='dna', default=False,
+    #                     action='store_true')
 
     parser.add_argument('-o', '--output', action="store", dest="output",
                         required=True, help='Output Name')
 
-    parser.add_argument('-f', '--input_fasta', action="store", dest="input_fasta",
+    parser.add_argument('-i', '--input_fasta', action="store", dest="input_fasta",
                         required=True, help='input fasta file from  demultiplex',
                         nargs='+')
+
+    parser.add_argument('-f', '--output_fasta', action="store_true", dest="output_fasta",
+                        default=False, help='Output as  "fasta",by default  "csv" file')
 
     options = parser.parse_args()
 
     return options
 
 
+def write_output(sequences, fileouthandel,  otype ):
+
+    for seq in sequences:
+
+        if otype == "csv":
+            print('{}\t{}'.format(seq[0], seq[1]), file=fileouthandel)
+        elif otype == "fasta":
+            write_fasta_sequence([ seq[0]+'_'+str(seq[1]), seq[0]], fileouthandel)
+
+    fileouthandel.close()
+
+
 if __name__ == '__main__':
 
+    # setup
     opts = get_options()
 
+    if opts.output_fasta:
+        output_type = 'fasta'
+    else:
+        output_type = 'csv'
+
     if opts.protein:
-        counts = dict()
-        for fname in opts.input_fasta:
-            counts = count_seqs_aa(fname, counts)
+        counter_fn = count_seqs_aa
+        output_prefix = 'aa_'
 
-        out_handelr = open('aa_' + opts.output, 'w')
-        sorted_seqs = sorted(counts.items(), key=operator.itemgetter(1),
-                             reverse=True)
+    else:
+        counter_fn = count_seqs_na
+        output_prefix = 'na_'
 
-        for seq in sorted_seqs:
-            print('{}\t{}'.format(seq[0], seq[1]), file=out_handelr)
+    # do the job for each file
+    counts = dict()
+    for fname in opts.input_fasta:
+        counts = counter_fn(fname, counts)
 
-        out_handelr.close()
+    out_handelr = open(output_prefix + opts.output, 'w')
+    sorted_seqs = sorted(counts.items(), key=operator.itemgetter(1),
+                         reverse=True)
 
-    if opts.dna:
-        counts = dict()
-        for fname in opts.input_fasta:
-            counts = count_seqs_na(fname, counts)
-
-        out_handelr = open('na_' + opts.output, 'w')
-
-        sorted_seqs = sorted(counts.items(), key=operator.itemgetter(1),
-                             reverse=True)
-
-        for seq in sorted_seqs:
-            print('{}\t{}'.format(seq[0], seq[1]), file=out_handelr)
-
-        out_handelr.close()
+    write_output(sequences=sorted_seqs, fileouthandel=out_handelr, otype=output_type)
