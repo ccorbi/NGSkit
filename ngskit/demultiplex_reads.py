@@ -207,6 +207,7 @@ def identification_method(method='standard'):
                         read_map['b2'] = b2
                         read_map['map'] = True
 
+
         return read_map
 
     def simple(read_seq, barcode, **Kargs):
@@ -253,6 +254,7 @@ def identification_method(method='standard'):
                 # success
                 read_map['b2'] = b2
                 read_map['map'] = True
+
 
         return read_map
 
@@ -342,6 +344,7 @@ def identification_method(method='standard'):
                         if match(b2, barcode.b2_seq, misreads_cutoff_barcode):
                             read_map['b2'] = b2
                             read_map['map'] = True
+                            return read_map
 
         return read_map
 
