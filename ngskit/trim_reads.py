@@ -156,7 +156,7 @@ def get_options():
     parser.add_argument('-m', '--trimming_method', action="store",
                         dest="trimming_method", default='standard', type=str,
                         choices=['standard',
-                                 'dynamic_target'],
+                                 'dynamic'],
                         help="""standard Trimm sequences according barcode file configuration, ignores float window output files\n
                                 dynamic  Trimm sequences using file lenght label, or output of float window demultiplex """)
     # Default 1
@@ -220,7 +220,7 @@ def workflow(opts):
             # ToDO: only get fastq files
             #ToDo: only those I want (target lenthg)
             # if method is dynamic, get all the files in the folder
-            if opts.trimming_method == 'dynamic_target':
+            if opts.trimming_method == 'dynamic':
                 # To do
                 # read lenght from the filename
                 seq_length = get_length_label(demultiplexed_fastq)
