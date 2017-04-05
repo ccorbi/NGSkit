@@ -10,6 +10,79 @@ import time
 import barcodes
 
 
+class Output_agent(object):
+    """Managment of the output demultiplexation
+
+        Parameters
+        ----------
+        barcodes_list : array_like
+            array witht he barcode objects
+
+        out_dir : str
+            output directory
+
+        Attributes
+        ----------
+        output_handlers: dict
+             dictionary with all the file handlers
+        output_dir: str
+            output directory
+
+
+    """
+    def __init__(self, barcodes_list, out_dir):
+
+        self.output_handlers = dict()
+        self.out_dir = out_dir
+        # open barcode file handlers for barcode
+        # improve I/O
+        for barcode in barcodes_list:
+            self.add_output(barcode)
+
+
+    def add_output(self, barcode, read=False):
+
+
+        if read:
+            file_name = barcode.id + "_" + str(read['target_len']) + "_F.fastq"
+            fileid = barcode.id + "_" + str(read['target_len'])
+        else:
+            file_name = barcode.id + "_" + str(barcode.trgt_len) + "_F.fastq"
+            fileid = barcode.id + "_" + str(barcode.trgt_len)
+
+        out_path = os.path.join(self.out_dir, barcode.id, file_name).replace('\\', '/')
+
+        self.output_handlers[fileid] = open(out_path, 'a')
+
+
+    def save_seq(self, read1_id, read1_seq, read1_qual, barcode, read):
+        """Save sequences in a Fastq file. ToDO: use fastq_tools to improve I/O
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        fileid = barcode.id + "_" + str(read['target_len'])
+        if fileid not in  self.output_handlers:
+            self.add_output(barcode, read)
+
+        # save seq in fastq format
+        self.output_handlers[fileid].write(read1_id)
+        self.output_handlers[fileid].write(read1_seq)
+        self.output_handlers[fileid].write("+\n")
+        self.output_handlers[fileid].write(read1_qual)
+
+
+    def close(self):
+        for file_handler in self.output_handlers.values():
+            file_handler.close()
+
+        return
+
+
 def match(seq, target, cutoff):
     '''Method used to compare sequence, such barcodes and constant regions.
 
@@ -73,7 +146,7 @@ def identification_method(method='standard'):
         `standard` (default) sequence match both barcodes and constant regions
         `quick` sequence match barcode and constant  region 1
         `simple` sequences with both barcodes
-        `dynamic_target` like `standard` but insertions and deletions in target
+        `dynamic` like `standard` but insertions and deletions in target
          sequence are allowed
 
     Returns
@@ -258,7 +331,7 @@ def identification_method(method='standard'):
 
         return read_map
 
-    def dynamic_target(read_seq, barcode, over_end=10, **Kargs):
+    def dynamic(read_seq, barcode, over_end=10, **Kargs):
         """if Forward and reverse Barcodes and constant regions  are in the seq.
         deletions or insertions in the target sequences are allowed.
 
@@ -354,8 +427,8 @@ def identification_method(method='standard'):
         return standard
     elif method == 'simple':
         return simple
-    elif method == 'dynamic_target':
-        return dynamic_target
+    elif method == 'dynamic':
+        return dynamic
     else:
         raise ValueError('Method {} do not exist'.format(method))
 
@@ -397,6 +470,11 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     # Temporal, to finish
     dump = Kargs.get('dump', False)
 
+    # open barcode file handlers
+    output = Output_agent(barcodes_list, out_dir)
+
+
+
     # Open Forward FastaQ file
     with open(inputfile, 'r') as read1:
 
@@ -413,8 +491,8 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                 read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
                 if read_match_info['map']:
-                    save_seq(read1_id, read1_seq, read1_qual,
-                             barcode, read_match_info, out_dir)
+                    output.save_seq(read1_id, read1_seq, read1_qual,
+                             barcode, read_match_info)
                 if dump:
                     pass
                 if save_frequencies:
@@ -422,6 +500,8 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                     gbl_stats = write_freqs(read_match_info, barcode, gbl_stats)
                     pass
     # close
+    output.close()
+
     if save_frequencies:
         # write file
         time_stamp = time.ctime()
@@ -432,26 +512,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     return
 
 
-def save_seq(read1_id, read1_seq, read1_qual, barcode, read, out_dir):
-    """Save sequences in a Fastq file. ToDO: use fastq_tools to improve I/O
 
-    Parameters
-    ----------
-
-    Returns
-    -------
-
-    """
-    file_name = barcode.id + "_" + str(read['target_len']) + "_F.fastq"
-    out_file = os.path.join(out_dir, barcode.id, file_name).replace('\\', '/')
-    f = open(out_file, 'a')
-    f.write(read1_id)
-    f.write(read1_seq)
-    f.write("+\n")
-    f.write(read1_qual)
-    f.close()
-
-    return
 
 
 def init_freqs_track(barcodes_list):
@@ -634,14 +695,14 @@ def get_options():
                         choices=['quick',
                                  'standard',
                                  'simple',
-                                 'dynamic_target'],
+                                 'dynamic'],
                         help="""Type of demultiplexation by default; STANDARD \n
                         `quick`: Only the first barcode and constant region
                         will be  check \n
                         `standard`: Both barcodes and constant regions will be
                          check\n
                         `simple`: Only the barcodes are used \n
-                        `dynamic_target`: frame shift search, Flexible search of\
+                        `dynamic`: frame shift search, Flexible search of\
                         the second  constant region and barcode\n
                         """)
     # Default 1
