@@ -44,8 +44,8 @@ def get_pfm(sequences):
     return matrix
 
 
-def get_pssm(sequences, pseudocounts= 1.5):
-    """Generate Position-Specific Scoring Matrix PSSM for sequences.
+def get_ppm(sequences, pseudocounts= 1.5):
+    """Generate Position-Specific Probability Matrix for sequences.
 
     Parameters
     ----------
