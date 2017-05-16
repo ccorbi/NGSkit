@@ -90,7 +90,7 @@ def get_options():
                         default="csv",  help='Output as  "fasta",by default  "csv" file', type=str,
                         choices= ['csv', 'fasta'])
 
-    parser.add_argument('-m', '--min-length', action="store", dest="min_length",
+    parser.add_argument('-m', '--min-len', action="store", dest="min_lenght",
                         type=int, default=0, help='Ignore sequence under this lenghth')
 
     options = parser.parse_args()
