@@ -139,7 +139,7 @@ class peptide_library(object):
                                                 'XmaI': 'CCCGGG',
                                                 'salI': 'GTCGAC'}))
         # CODON usage
-        self.specie = kwargs.get('specie', 'human')
+        self.codon_usage_specie = kwargs.get('codon_usage_specie', 'human') # human E.coli
 
         # Internal Variables
 
@@ -255,7 +255,7 @@ class peptide_library(object):
 
         for seq, seq_id in self._aalibrary.items():
 
-            seq_dna = translate2na(seq)
+            seq_dna = translate2na(seq, specie=self.codon_usage_specie)
             # check for the restriction sites
             seq_dna_checked = clean_restriction_sites(seq_dna, self.restriction_enzyme)
 
@@ -286,6 +286,8 @@ class peptide_library(object):
             print('>{}_{}'.format(seq_id, seq), file=output)
             print(CONSTANT_F + seq_dna_checked.lower() +
                   stop + refill_seq + CONSTANT_R, file=output)
+
+        output.close()
 
         return
 
