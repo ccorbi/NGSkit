@@ -205,7 +205,57 @@ for idx, a in enumerate(ppm.columns):
 
 return entropy_vec
 
-def mutual_information(sequences, i, j):
+def mi_matrix(sequences, n_jobs=4):
+
+    """
+
+    """
+
+    # get Total seq
+    #N = sum([X for X in ptm[i].values()])
+    # n = sum([ sum(position.values()) for position in pfm.values()])
+    frequencies = get_pfm(sequences)
+    N = len(sequences[0])
+    # N = list(range(N))
+    # transform to ....
+
+    # insert frequency matrix, and positions1, position2
+    # return MI of a pairf positions
+    # given position K1, and poistion K2
+
+    mi_matrix = pd.DataFrame(index=list(range(N)), columns=list(range(N)) )
+
+    for i in range(N):
+        for j in range(i,N):
+
+            mutualinfo = mutual_information(sequences, frequencies, i, j )
+            mi_matrix.at[i,j]= mutualinfo
+            mi_matrix.at[j,i]= mutualinfo
+
+        #with Pool() as p:
+        #    func = partial(calc_mutual,
+        #               sequences=sequences,
+        #               frequencies= frequencies,
+        #               N = N,
+        #               i=i,
+        #               j=j,
+        #               ai=ai)
+        #    mi += p.map(func, aminoacids)
+
+
+    return mi_matrix
+
+
+def get_freq_pairs(sequences, i, j, ai, aj):
+
+    filteri = [seq  for seq in sequences if seq[i] == ai]
+    filterj =  [seq for seq in filteri if seq[j] == aj  ]
+
+    return filterj
+
+
+def mutual_information(sequences, frequencies,  i, j  ):
+
     """To identify correlated positions in peptide alignments, we used
     mutual information for all possible position pairs. Mutual information is computed as:.
 (j)
@@ -226,6 +276,7 @@ def mutual_information(sequences, i, j):
     Parameters
     ----------
     ppm : dict
+    frequencies: pandas
     i: int
     j: int
 
@@ -234,62 +285,99 @@ def mutual_information(sequences, i, j):
     float
 
     """
+
+
     aminoacids = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
     "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W"]
-    # get Total seq
-    #N = sum([X for X in ptm[i].values()])
-    # n = sum([ sum(position.values()) for position in pfm.values()])
-    frequencies = get_pfm(sequences)
-    N = float(len(sequences))
 
-    # transform to ....
+    N= float(len(sequences))
 
-    # insert frequency matrix, and positions1, position2
-    # return MI of a pairf positions
-    # given position K1, and poistion K2
-    mi = list()
-    for ai in aminoacids:
-        for aj in aminoacids:
-            mi.append(calc_mutual(sequences, frequencies, N, i, j ,  ai, aj ))
-        #with Pool() as p:
-        #    func = partial(calc_mutual,
-        #               sequences=sequences,
-        #               frequencies= frequencies,
-        #               N = N,
-        #               i=i,
-        #               j=j,
-        #               ai=ai)
-        #    mi += p.map(func, aminoacids)
+    suma = np.zeros([20,20])
+
+    for idx,ax in enumerate(aminoacids):
+        for jdx,ay in enumerate(aminoacids):
+            # get prob aminoacid X on postion i
+            prob_ai =  float(frequencies[i].get(ax, 0.0)) / N
+            # get prob aminoacid Y on position j
+            prob_aj =  float(frequencies[j].get(ay, 0.0)) / N
+            # prob of co-appear
+            freq_pairs_ij =  len(get_freq_pairs(sequences, i, j, ax, ay))
+            prob_ij =  freq_pairs_ij / N# from fequency
+
+            try:
+
+                r =  prob_ij* ( np.log(prob_ij/(prob_ai*prob_aj)))
 
 
-    return mi
+                suma[idx][jdx] = r
+
+            except ZeroDivisionError:
+                suma[idx][jdx] = 0.0
+
+    return np.nansum(suma)
 
 
-def get_freq_pairs(sequences, i, j, ai, aj):
+def mutual_informationm(sequences, frequencies,  i, j , n_jobs=8 ):
 
-    filteri = [seq   for seq in sequences if seq[i] == ai]
-    filterj =  [seq for seq in filteri if seq[j] == aj  ]
+    """To identify correlated positions in peptide alignments, we used
+    mutual information for all possible position pairs. Mutual information is computed as:.
+(j)
+    MI = sum 1-20 sum 1-20 p(i,j) log {P(i,j)/ P1i P2}
 
-    return filterj
+    where P(i,j) stands for the probability of having amino acid i at one position together
+    with amino acid j at the other position in a peptide. P1(i) is the probability of having amino
+    acid i at one position and P2(j) the probability of having amino acid j at the other position.
+    MI=0 corresponds to independence of the two positions, whereas larger values indicate that
+    knowing which amino acids are found at one position gives some information about which ones
+    are expected at the other position. One limitation of mutual information is that non-zero
+    values are often expected to be present by chance, even for randomly generated peptides.
+    We therefore used the mutual information P-value as a filter (other statistical measures
+    such as the Z-scores could also be used). All P-values have been computed by randomly
+    shuffling the amino acids within the alignment columns. A threshold of 0.001 has been
+    used to define correlated positions.
 
-def calc_mutual(sequences, frequencies,N,  i, j ,  ai, aj ):
+    Parameters
+    ----------
+    ppm : dict
+    frequencies: pandas
+    i: int
+    j: int
 
-    prob_ai =  float(frequencies[i].get(ai, 0.0)) / N # get freq for that a in i
-    prob_aj =  float(frequencies[j].get(aj, 0.0)) / N# get freq for that a in j
-    freq_pairs_ij =  len(get_freq_pairs(sequences, i, j, ai, aj))
-    prob_ij =  freq_pairs_ij / N# from fequency
-    # print prob_ij, prob_ai, prob_aj, N, i, j , ai , aj
-    try:
+    Returns
+    -------
+    float
 
-        r =  prob_ij*np.log(prob_ij/(prob_ai*prob_aj))
+    """
 
-        #if r == np.float64('nan'):
-        #    return 0.
-        #else:
-        return r
 
-    except ZeroDivisionError:
-        return np.nan
+    aminoacids = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
+    "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W"]
+
+    N= float(len(sequences))
+
+    suma = np.zeros([20,20])
+
+    for idx,ax in enumerate(aminoacids):
+        for jdx,ay in enumerate(aminoacids):
+            # get prob aminoacid X on postion i
+            prob_ai =  float(frequencies[i].get(ax, 0.0)) / N
+            # get prob aminoacid Y on position j
+            prob_aj =  float(frequencies[j].get(ay, 0.0)) / N
+            # prob of co-appear
+            freq_pairs_ij =  len(get_freq_pairs(sequences, i, j, ax, ay))
+            prob_ij =  freq_pairs_ij / N# from fequency
+
+            try:
+
+                r =  prob_ij* ( np.log(prob_ij/(prob_ai*prob_aj)))
+
+
+                suma[idx][jdx] = r
+
+            except ZeroDivisionError:
+                suma[idx][jdx] = 0.0
+
+    return np.nansum(suma)
 
 #
 # CLUSTERING

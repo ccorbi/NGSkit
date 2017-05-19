@@ -11,8 +11,8 @@ Example
 -------
 
     > from  oligolib_generator import *
-    > disrd_CONSTANT_R = 'CAGCCTCTTCATCTGGC'
-    > disrd_CONSTANT_L = 'GGTGGAGGATCCGGAG'
+    > disrd_CONSTANT_F = 'CAGCCTCTTCATCTGGC'
+    > disrd_CONSTANT_R = 'GGTGGAGGATCCGGAG'
     > peptides = {'RTLSQLYCSYGPLT': 'MUS81',
                    'NPFREKKFFCTIL': 'GNG4',
                    'TEGPDSD': 'SFN',
@@ -21,8 +21,8 @@ Example
 
     > for seq,_id in peptides.items():
     ...     lib = peptide_library(template=seq,
-                                  CONSTANT_R = 'CAGCCTCTTCATCTGGC',
-                                  CONSTANT_L = 'GGTGGAGGATCCGGAG')
+                                  CONSTANT_F = 'CAGCCTCTTCATCTGGC',
+                                  CONSTANT_R = 'GGTGGAGGATCCGGAG')
     ...     lib.generate_single_variants()
     ...     lib.write('./fasta/{}_disorderome_CR.fasta'.format(_id), extend=87)
 
@@ -76,11 +76,11 @@ class peptide_library(object):
 
             lib_name : str, optional
                 Name of the library
-            CONSTANT_R : str
-                constant region in the Right or
+            CONSTANT_F : str
+                Forward constant region
                 first constant region 5'
-            CONSTANT_L : str
-                constant region in the Left or
+            CONSTANT_R : str
+                Reverse constant region
                 second constant region 3'
 
             include_template : bool
@@ -126,8 +126,8 @@ class peptide_library(object):
                 raise Exception
 
         # Set up Constant regions
+        self.CONSTANT_F = kwargs.get('CONSTANT_F', '')
         self.CONSTANT_R = kwargs.get('CONSTANT_R', '')
-        self.CONSTANT_L = kwargs.get('CONSTANT_L', '')
 
         # limit for the library
         self.lib_limit = kwargs.get('lib_size', False)
@@ -189,7 +189,7 @@ class peptide_library(object):
         # Set up suffix for seq id purpuses
         # _MD_ for default
         # Manual Desings
-        suffix = self.lib_name + kwargs.get('suffix', '_MD_')
+        suffix = kwargs.get('suffix', '_MD_')
         # Load file cfg ToDo use pandas
         sep = kwargs.get('sep', None)
         column = kwargs.get('column', 0)
@@ -247,8 +247,8 @@ class peptide_library(object):
 
         output = open(file_name, 'w')
 
+        CONSTANT_F = kwargs.get('CONSTANT_F', self.CONSTANT_F)
         CONSTANT_R = kwargs.get('CONSTANT_R', self.CONSTANT_R)
-        CONSTANT_L = kwargs.get('CONSTANT_L', self.CONSTANT_L)
 
         # This can be improved
         SPACER = 'TGATAATAGTAATAGTGATAGTGATAATGATAATGA'
@@ -271,7 +271,7 @@ class peptide_library(object):
             if extend:
 
                 # Determine the legnth of the spacer sequence
-                base_oligo = len(seq_dna_checked) + len(CONSTANT_R) + len(CONSTANT_L) + len(stop)
+                base_oligo = len(seq_dna_checked) + len(CONSTANT_F) + len(CONSTANT_R) + len(stop)
                 spacer_len = extend - base_oligo
                 if spacer_len < 0:
                     raise ValueError(
@@ -284,8 +284,8 @@ class peptide_library(object):
                 refill_seq = ''
             # save in fasta format
             print('>{}_{}'.format(seq_id, seq), file=output)
-            print(CONSTANT_R + seq_dna_checked.lower() +
-                  stop + refill_seq + CONSTANT_L, file=output)
+            print(CONSTANT_F + seq_dna_checked.lower() +
+                  stop + refill_seq + CONSTANT_R, file=output)
 
         return
 
@@ -786,8 +786,8 @@ class Template(object):
 
 
 def check_lib_integrty(file_library, master_seq, oligo_length,
-                       CONSTANT_R='CAGCCTCTTCATCTGGC',
-                       CONSTANT_L='GGTGGAGGATCCGGAG',
+                       CONSTANT_F='CAGCCTCTTCATCTGGC',
+                       CONSTANT_R='GGTGGAGGATCCGGAG',
                        restriction_site=['GAATTC', 'CCCGGG', 'GTCGAC']):
     """Check if the librar complains with restrictions sites and lenght setup.
 
@@ -830,7 +830,7 @@ def check_lib_integrty(file_library, master_seq, oligo_length,
                                                                                       num,
                                                                                       seq))
 
-                skip = len(CONSTANT_R)
+                skip = len(CONSTANT_F)
                 template = translate2aa(seq[skip:len(aaseq) * 3 + skip])
 
                 if aaseq != template:
@@ -855,7 +855,7 @@ def check_lib_integrty(file_library, master_seq, oligo_length,
                                                                                                  template,
                                                                                                  seq))
 
-                if seq.find(CONSTANT_R) != 0:
+                if seq.find(CONSTANT_F) != 0:
                     print('ERROR with the contatn region R {} {} {} {} {} {}'.format(pep,
                                                                                      mut,
                                                                                      num,
@@ -863,7 +863,7 @@ def check_lib_integrty(file_library, master_seq, oligo_length,
                                                                                      template,
                                                                                      seq))
 
-                if seq.find(CONSTANT_L) + len(CONSTANT_L) != oligo_length:
+                if seq.find(CONSTANT_R) + len(CONSTANT_R) != oligo_length:
                     print('ERROR with the contatn region L {} {} {} {} {} {}'.format(pep,
                                                                                      mut,
                                                                                      num,
