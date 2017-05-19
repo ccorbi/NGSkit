@@ -30,7 +30,7 @@ Example
 Notes
 -----
 
-    Tested on python 2.7.
+    Tested on python 2.7. 3.6
 
     To Do ::
         Finish stand alone, configration and arguments passing
@@ -92,9 +92,9 @@ class peptide_library(object):
                 (by default, dict_restriction = ['GAATTC','CCCGGG']
                 or ecorI, XmaI, salI
 
-            specie : str
-                Specie of the lirbary. This determine the codon frequency usage,
-                (by default ('specie':'human')
+            species : str
+                species of the lirbary. This determine the codon frequency usage,
+                (by default ('species':'human')
 
         See Also
         --------
@@ -130,7 +130,7 @@ class peptide_library(object):
         self.CONSTANT_R = kwargs.get('CONSTANT_R', '')
 
         # limit for the library
-        self.lib_limit = kwargs.get('lib_size', False)
+        self.lib_limit = kwargs.get('lib_size_limit', None)
 
         # SET UP Restriction enzymes
         self.restriction_enzyme = dict()
@@ -139,7 +139,7 @@ class peptide_library(object):
                                                 'XmaI': 'CCCGGG',
                                                 'salI': 'GTCGAC'}))
         # CODON usage
-        self.codon_usage_specie = kwargs.get('codon_usage_specie', 'human') # human E.coli
+        self.codon_usage_species = kwargs.get('codon_usage_species', 'human') # human E.coli
 
         # Internal Variables
 
@@ -218,12 +218,12 @@ class peptide_library(object):
 
                 if not seq in self._aalibrary:
                     # check library limit
-                    if self._library_limit_satuts() is False:
+                    if self._lib_notfull() is False:
                         self._aalibrary[seq] = self._name_seq(suffix=suffix)
 
         return
 
-    def write(self, file_name='', add_stop_end=True, extend=False, **kwargs):
+    def write(self, file_name='', add_stop_codon=True, extend=False, **kwargs):
         """Translate and Write the library in fasta format.
 
         Parameters
@@ -255,12 +255,12 @@ class peptide_library(object):
 
         for seq, seq_id in self._aalibrary.items():
 
-            seq_dna = translate2na(seq, specie=self.codon_usage_specie)
+            seq_dna = translate2na(seq, species=self.codon_usage_species)
             # check for the restriction sites
             seq_dna_checked = clean_restriction_sites(seq_dna, self.restriction_enzyme)
 
             # add double stop codons at the end
-            if add_stop_end:
+            if add_stop_codon:
 
                 stop = 'TGATAA'
             else:
@@ -381,7 +381,7 @@ class peptide_library(object):
                 # if the peptide exist in the library ignore
                 if not a in self._aalibrary:
                     # check library limit
-                    if self._library_limit_satuts() is False:
+                    if self._lib_notfull() is False:
                         self._aalibrary[a] = self._name_seq(suffix=suffix)
 
         return
@@ -424,7 +424,7 @@ class peptide_library(object):
 
             if not a in self._aalibrary:
                 # check library limit
-                if self._library_limit_satuts() is False:
+                if self._lib_notfull() is False:
                     self._aalibrary[a] = self._name_seq(suffix=suffix)
 
 
@@ -471,7 +471,7 @@ class peptide_library(object):
 
                 if not random_mutation in self._aalibrary:
                     # check library limit
-                    if self._library_limit_satuts() is False:
+                    if self._lib_notfull() is False:
                         self._aalibrary[random_mutation] = self._name_seq(suffix=suffix)
                         counter += 1
 
@@ -506,7 +506,7 @@ class peptide_library(object):
 
             if not variant in self._aalibrary:
                 # check library limit
-                if self._library_limit_satuts() is False:
+                if self._lib_notfull() is False:
                     self._aalibrary[variant] = self._name_seq(suffix=suffix)
 
         return
@@ -525,8 +525,9 @@ class peptide_library(object):
         return lib_name + suffix + str(index_id)
 
 
-    def _library_limit_satuts(self):
+    def _lib_notfull(self):
         # check library limit
+        # _library_ limit_satuts
         if self.lib_limit:
             if len(self._aalibrary) >= self.lib_limit:
                 # convert this to a raise

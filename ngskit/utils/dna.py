@@ -63,9 +63,9 @@ def translate2aa(nseq, start=1):
     return pseq
 
 
-def translate2na(seq, specie='human'):
+def translate2na(seq, species='human'):
     """Return a Nucleotide seq for a aminoacid sequences. the codon will be chosed
-    according the codon frequency of each specie, by default human
+    according the codon frequency of each species, by default human
 
     Paramaters
     ----------
@@ -79,13 +79,13 @@ def translate2na(seq, specie='human'):
     seq_na = []
     for a in seq:
         codons = A2C_DICT.get(a)
-        seq_na.append(codon_weighted_random_choice(codons, specie))
+        seq_na.append(codon_weighted_random_choice(codons, species))
 
     # print(random.choice(foo))
     return ''.join(seq_na)
 
 
-def codon_weighted_random_choice(codons, specie):
+def codon_weighted_random_choice(codons, species):
     """Returns a  element from a list. The probability for each element
     elem in list to be selected is weighted by weight(elem).
     weight_dictionary`` must be a callable accepting one argument, and returning a
@@ -98,8 +98,8 @@ def codon_weighted_random_choice(codons, specie):
     codons : array_like
         must be an iterable containing more than one element.
 
-    specie : str
-        Codon usage specie, human, e.coli, etc.
+    species : str
+        Codon usage species, human, e.coli, etc.
 
 
 
@@ -115,10 +115,10 @@ def codon_weighted_random_choice(codons, specie):
 
     """
     try:
-        weight_dictionary = USAGE_FREQ.get(specie)
+        weight_dictionary = USAGE_FREQ.get(species)
     except ValueError:
         # may be this could be a warning, and call human codon usage
-        raise ValueError('{} is not a valid specie'.format(specie))
+        raise ValueError('{} is not a valid species'.format(species))
 
     weights = 0
     elems = []
