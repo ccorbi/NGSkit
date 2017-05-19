@@ -54,7 +54,7 @@ from ngskit.utils.dna import (translate2aa, translate2na, clean_restriction_site
 
 
 class peptide_library(object):
-    """Class to Generate library.
+    """Main Class to Generate library.
 
 
     """
@@ -94,7 +94,7 @@ class peptide_library(object):
 
             species : str
                 species of the lirbary. This determine the codon frequency usage,
-                (by default ('species':'human')
+                (by default ('species':'human') accept 'E.coli')
 
         See Also
         --------
@@ -105,7 +105,13 @@ class peptide_library(object):
 
 
         """
-        # Init class arguments
+        # compatible class arguments and defaults
+        self.compat_args = {}
+        # validate kargs
+        # kwds = kwargs.copy()
+        # _check_for_invalid_keys(fname, kwargs, compat_args)
+        # _check_for_default_values(fname, kwds, compat_args)
+        # init
         # set up template sequence
         if isinstance(template, str):
             self.template = Template(template)
@@ -152,9 +158,19 @@ class peptide_library(object):
 
         return
 
+    def __call__(self):
+        self.info()
+
     def __len__(self):
 
         return len(self._aalibrary)
+
+    def info(self):
+
+        for arg in self.compat_args.keys():
+            print(arg)
+
+        return
 
     def load_designs(self, seq_file, **kwargs):
         """ Load a file with the seq of designs for the template. No headers
