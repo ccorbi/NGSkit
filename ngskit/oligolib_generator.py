@@ -59,6 +59,9 @@ class peptide_library(object):
 
     """
 
+    # compatible class arguments
+
+
     def __init__(self, template=None, **kwargs):
         """Init.
 
@@ -105,41 +108,36 @@ class peptide_library(object):
 
 
         """
-        # compatible class arguments
-        class_arguments = ['include_template',
-                           'lib_name',
-                           'CONSTANT_F',
-                           'CONSTANT_R',
-                           'lib_size_limit',
-                           'restriction_enzyme',
-                           'codon_usage_speciess']
+        self._class_arguments = ['include_template',
+                                 'lib_name',
+                                 'CONSTANT_F',
+                                 'CONSTANT_R',
+                                 'lib_limit',
+                                 'restriction_enzymes',
+                                 'codon_usage_species']
 
         # check the passed arguments
-        for k in kwargs.keys():
-            if k not in class_arguments:
+        for k in kwargs:
+            if k not in self._class_arguments:
                 raise ValueError("{} got an unexpected keyword argument '{}' ".format(self.__class__.__name__, k))
 
-        # validate kargs
-        # kwds = kwargs.copy()
-        # _check_for_invalid_keys(fname, kwargs, compat_args)
-        # _check_for_default_values(fname, kwds, compat_args)
-        # init
-        # set up template sequence
+
+        # init template sequence
         if isinstance(template, str):
             self.template = Template(template)
 
             # Include template in the library
-            self.include_template_in = kwargs.get('include_template', True)
+            self.include_template = kwargs.get('include_template', True)
 
             # Optional name of the lib, by default use the sequences
             self.lib_name = kwargs.get('lib_name', self.template.seq)
 
         else:
-            if template == None:
+            if template is None:
                 self.template = False
                 # Include template in the library
-                self.include_template_in = kwargs.get('include_template', False)
-                self.lib_name = kwargs.get('lib_name', 'No_Tempalte')
+                self.include_template = kwargs.get('include_template', False)
+                self.lib_name = kwargs.get('lib_name', 'No_Template')
             else:
                 raise Exception
 
@@ -148,22 +146,26 @@ class peptide_library(object):
         self.CONSTANT_R = kwargs.get('CONSTANT_R', '')
 
         # limit for the library
-        self.lib_limit = kwargs.get('lib_size_limit', None)
+        self.lib_limit = kwargs.get('lib_limit', None)
 
         # SET UP Restriction enzymes
-        self.restriction_enzyme = dict()
-        self.add_restriction_enzyme(kwargs.get('restriction_enzymes',
-                                               {'ecorI': 'GAATTC',
-                                                'XmaI': 'CCCGGG',
-                                                'salI': 'GTCGAC'}))
-        # CODON usage
+        self.restriction_enzymes = dict()
+        self.add_restriction_enzyme(kwargs.get('restriction_enzymes', dict()))
+                                                    #{'ecorI': 'GAATTC',
+                                                    #'XmaI': 'CCCGGG',
+                                                    #'salI': 'GTCGAC'}
+        # Setup CODON usage and validate
         self.codon_usage_species = kwargs.get('codon_usage_species', 'human') # human E.coli
 
-        # Internal Variables
+        if self.codon_usage_species not in ['human', 'E.coli']:
+            raise ValueError("{} is not supported codon usage ".format(self.codon_usage_species))
+
+
+        # Init Internal Variables
 
         self._aalibrary = dict()
 
-        if self.include_template_in:
+        if self.include_template:
 
             index_id = len(self._aalibrary)
             self._aalibrary[template] = self.lib_name + '_OO_' + str(index_id)
@@ -179,8 +181,8 @@ class peptide_library(object):
 
     def info(self):
 
-        for arg in self.compat_args.keys():
-            print(arg)
+        for arg in self._class_arguments:
+            print("{} :\t{}".format(arg, self.__getattribute__(arg)))
 
         return
 
@@ -285,7 +287,7 @@ class peptide_library(object):
 
             seq_dna = translate2na(seq, species=self.codon_usage_species)
             # check for the restriction sites
-            seq_dna_checked = clean_restriction_sites(seq_dna, self.restriction_enzyme)
+            seq_dna_checked = clean_restriction_sites(seq_dna, self.restriction_enzymes)
 
             # add double stop codons at the end
             if add_stop_codon:
@@ -344,11 +346,11 @@ class peptide_library(object):
         """
         if isinstance(enzymes, dict):
             for name, enzym in enzymes.items():
-                self.restriction_enzyme[name] = enzym
+                self.restriction_enzymes[name] = enzym
         if isinstance(enzymes, list):
-            idx = len(self.restriction_enzyme)
+            idx = len(self.restriction_enzymes)
             for name, enzym in enumerate(enzymes):
-                self.restriction_enzyme[name+idx] = enzym
+                self.restriction_enzymes[name+idx] = enzym
 
         return
 
