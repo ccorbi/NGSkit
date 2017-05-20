@@ -105,8 +105,20 @@ class peptide_library(object):
 
 
         """
-        # compatible class arguments and defaults
-        self.compat_args = {}
+        # compatible class arguments
+        class_arguments = ['include_template',
+                           'lib_name',
+                           'CONSTANT_F',
+                           'CONSTANT_R',
+                           'lib_size_limit',
+                           'restriction_enzyme',
+                           'codon_usage_speciess']
+
+        # check the passed arguments
+        for k in kwargs.keys():
+            if k not in class_arguments:
+                raise ValueError("{} got an unexpected keyword argument '{}' ".format(self.__class__.__name__, k))
+
         # validate kargs
         # kwds = kwargs.copy()
         # _check_for_invalid_keys(fname, kwargs, compat_args)
