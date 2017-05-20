@@ -9,8 +9,8 @@ def test_lib_default_creation():
     test_lib = olg.peptide_library('AAAA')
 
     assert test_lib.lib_name == 'AAAA'
-    assert test_lib.specie == 'human'
-    assert test_lib.include_template_in
+    assert test_lib.codon_usage_species == 'human'
+    assert test_lib.include_template
     assert len(test_lib) == 1
     assert test_lib._aalibrary['AAAA'] == 'AAAA_OO_0'
 
@@ -18,22 +18,22 @@ def test_lib_default_creation():
 def test_lib_custom_creation():
 
     # create a new library abd check if user set values works
-    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     assert test_lib.lib_name != 'AAA'
-    assert test_lib.specie != 'human'
-    assert test_lib.include_template_in == False
-    assert test_lib.CONSTANT_R == 'AGT'
-    assert test_lib.CONSTANT_L == 'XXX'
+    assert test_lib.codon_usage_species != 'human'
+    assert test_lib.include_template == False
+    assert test_lib.CONSTANT_F == 'AGT'
+    assert test_lib.CONSTANT_R == 'XXX'
     assert len(test_lib) == 0
 
 
 def test_lib_creation_from_a_file():
 
     # test_lib to load designs and add restriction enzymes
-    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
     test_lib.load_designs(fname)
@@ -44,22 +44,23 @@ def test_lib_creation_from_a_file():
 
 def test_add_restriction_enzymes():
 
-    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
     test_lib.load_designs(fname)
-
+    # add restriction enzymes as a list, nop name
     test_lib.add_restriction_enzyme(['GCTGCC', 'GCAGCT'])
+    # add restriction enzyme has a dict, with id
     test_lib.add_restriction_enzyme({'free': 'GCAGCG'})
-    assert len(test_lib.restriction_enzyme) == 6
+    assert len(test_lib.restriction_enzymes) == 3
 
 
 def test_write_library():
 
     # create a lib from a file
-    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('AAA', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     fname = os.path.join(os.path.dirname(__file__), 'test_file.inp')
     test_lib.load_designs(fname)
@@ -103,8 +104,8 @@ def test_change_template():
 def test_simple_var_generation():
     # test_lib generation of all simple variants
     # by default option
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants()
     test_lib.write(file_name='wtestvar.fasta')
@@ -115,8 +116,8 @@ def test_simple_var_generation():
 
 def test_bias_var_generation():
     # test_lib generation of all variant with exclusion variant
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['A'])
     assert len(test_lib) == 54
@@ -124,8 +125,8 @@ def test_bias_var_generation():
 
 def test_restrict_double_bias_var_generation():
     # test_lib generation of all variant with restriction variants
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['G', 'C'], bias_type='restrict')
     assert len(test_lib) == 3
@@ -133,8 +134,8 @@ def test_restrict_double_bias_var_generation():
 
 def test_double_bias_var_generation():
     # test_lib generation of all variant with exclusion variant more than one
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['A', 'G'])
     assert len(test_lib) == 51
@@ -149,23 +150,23 @@ def test_double_bias_var_generation():
 
 def test_writing_options():
     # Test writing
-    test_lib = olg.peptide_library('CCC',  include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC',  include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['A', 'G'])
     # extend sequence to 25
     test_lib.write(file_name='test-lib.fasta', extend=25)
 
-    olg.check_lib_integrty('test-lib.fasta', 'CCC', 25, CONSTANT_R='AGT',
-                           CONSTANT_L='XXX', restriction_site=test_lib.restriction_enzyme.values())
+    olg.check_lib_integrty('test-lib.fasta', 'CCC', 25, CONSTANT_F='AGT',
+                           CONSTANT_R='XXX', restriction_site=test_lib.restriction_enzymes.values())
 
     os.remove('test-lib.fasta')
 
 
 def test_random_trim():
     # Test random removing
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['A', 'G'])
     test_lib.random_remove(21)
@@ -174,13 +175,13 @@ def test_random_trim():
 
 def test_radom_generation():
     # test_lib random generation
-    test_lib = olg.peptide_library('CCC',  include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC',  include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_random_variants(how_many=10, mutant_kind=[2])
     test_lib.write(add_stop_end=False)
-    olg.check_lib_integrty('test-lib.fasta', 'CCC', 15, CONSTANT_R='AGT',
-                           CONSTANT_L='XXX', restriction_site=test_lib.restriction_enzyme.values())
+    olg.check_lib_integrty('test-lib.fasta', 'CCC', 15, CONSTANT_F='AGT',
+                           CONSTANT_R='XXX', restriction_site=test_lib.restriction_enzymes.values())
 
     # test_lib random generation in range
     test_lib._aalibrary = dict()
@@ -198,16 +199,16 @@ def test_radom_generation():
     test_lib.generate_inframe_variants(frame_size=2)
     test_lib.write(add_stop_end=False)
 
-    olg.check_lib_integrty('test-lib.fasta', 'CCC', 15, CONSTANT_R='AGT',
-                           CONSTANT_L='XXX', restriction_site=test_lib.restriction_enzyme.values())
+    olg.check_lib_integrty('test-lib.fasta', 'CCC', 15, CONSTANT_F='AGT',
+                           CONSTANT_R='XXX', restriction_site=test_lib.restriction_enzymes.values())
 
     os.remove('test-lib.fasta')
 
 
 
 def test_load_json():
-    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_R='AGT',
-                                   CONSTANT_L='XXX', lib_name='test-lib', specie='E.coli')
+    test_lib = olg.peptide_library('CCC', include_template=False, CONSTANT_F='AGT',
+                                   CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
 
     # test_lib json generation permutations
