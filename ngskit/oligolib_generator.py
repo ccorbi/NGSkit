@@ -355,17 +355,17 @@ class peptide_library(object):
         return
 
 
-    def random_remove(self, times):
-        """Remove radon N items from the library.
+    def random_purge(self, nsize):
+        """Remove randon N items from the library.
 
         Parameters
         ----------
-        times : int
+        nsize : int
             Number of random items to remove
 
 
         """
-        for i in range(times):
+        for _ in range(nsize):
             self._aalibrary.pop(random.choice(list(self._aalibrary)))
 
         return

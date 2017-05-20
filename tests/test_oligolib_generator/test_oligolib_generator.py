@@ -169,11 +169,11 @@ def test_random_trim():
                                    CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
 
     test_lib.generate_single_variants(bias=['A', 'G'])
-    test_lib.random_remove(21)
+    test_lib.random_purge(21)
     assert len(test_lib) == 30
 
 
-def test_radom_generation():
+def test_random_generation():
     # test_lib random generation
     test_lib = olg.peptide_library('CCC',  include_template=False, CONSTANT_F='AGT',
                                    CONSTANT_R='XXX', lib_name='test-lib', codon_usage_species='E.coli')
