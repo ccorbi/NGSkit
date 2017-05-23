@@ -184,6 +184,9 @@ class peptide_library(object):
         for arg in self._class_arguments:
             print("{} :\t{}".format(arg, self.__getattribute__(arg)))
 
+        n = len(self._aalibrary)
+        print("{} :\t{}".format('Seq in the lib', self.__getattribute__(n)))
+
         return
 
     def load_designs(self, seq_file, **kwargs):
