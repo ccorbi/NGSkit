@@ -180,7 +180,7 @@ class peptide_library(object):
         return len(self._aalibrary)
 
     def info(self):
-
+        """ToDo: Not sure if print is the best output."""
         for arg in self._class_arguments:
             print("{} :\t{}".format(arg, self.__getattribute__(arg)))
 
