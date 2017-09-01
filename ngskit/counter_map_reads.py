@@ -11,7 +11,12 @@ __author__ = 'C. corbi-Verge'
 __email__ = 'carles.corbi@gmail.com'
 __about__ = \
     ''' This is a small script to count and rank reads from a fasta file. This script is agnostic, do not compare or map
-             the reads with any source or library'''
+             the reads with any source or library
+bowtie-build -f WHEP.90k.rev-compl.108na.lib.fas WHEP.90k.rev-compl.108na.lib
+for i in *CT*fasta;do echo ${i};bowtie -v 0 ../../../SEQ_PDZ_20170228/lib/cterm_7aa -f ${i} > ./bowtie/${i%.fasta}.out;done
+counter_map_reads.py  --bowtie -o ${i%.out}.counter -i ${i} -s 50000;done
+
+    '''
 
 
 def load_blastout(filename):
@@ -72,18 +77,29 @@ def return_cov(df, lib_size=6000):
 
 def from_bowtie_generate_ranking_file(df, outputname, **kargs):
 
-    # fileq2 = clean.groupby('subjectId').agg(len)
+    # Count Reads
+    count = df.groupby(['subjectId'], as_index=False)['off'].agg(len)
+    count.rename(columns={'off': 'Counts'}, inplace=True)
+    # Count variants
+    var = df.groupby(['subjectId' ], as_index=False)['off'].agg(len)
+    var.rename(columns={'off': 'Var'}, inplace=True)
+    # get the original seq and discard variants, I do not like it a lot
+    pureseq = df[(df['off']==0) & (df['mismatchDescriptor'].isnull() )]
+    pureseq = pureseq.drop_duplicates(subset=['subjectId'])
+    pureseq = pureseq[['subjectId','seq']]
+    # Merge
+    final_data = pd.merge(pureseq, var, on= 'subjectId')
+    final_data = pd.merge(final_data, count, on= 'subjectId')
+    # sort and translate to AA
+    final_data.sort_values(by='Counts', ascending=False, inplace=True)
 
-    q = df.groupby(['subjectId', 'seq'], as_index=False)['off'].agg(len)
-    q.sort_values(by='off', ascending=False, inplace=True)
-    q.rename(columns={'off': 'Counts'}, inplace=True)
-    q['aa'] = q['seq'].apply(translate2aa)
+    final_data['aa'] = final_data['seq'].apply(translate2aa)
 
     # print(q.head(5))
 
-    q.to_csv(outputname, index=False, columns=['subjectId', 'aa',
-             'Counts'])
-    return q
+    final_data.to_csv(outputname, index=False, columns=['subjectId', 'aa',
+             'Counts', 'Var'])
+    return final_data
 
 
 def get_options():
@@ -151,8 +167,9 @@ if __name__ == '__main__':
 
         data = load_bowtieout(opts.input_file)
         raw_seqs = data.shape[0]
-
-        data = filter_bowtie(data)
+        # this should be optional
+        # usually I filter web i map to the library
+        # data = filter_bowtie(data)
         filter_seqs = data.shape[0]
         unique_seqs = data['subjectId'].unique().shape[0]
         coverage = ''

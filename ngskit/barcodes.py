@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     options = parser.parse_args()
 
-    excel_barcode = pd.read_excel(options.barcode_file, header=None)
+    excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int})
     # Output format
     if options.out_prefix:
         template_file_name = options.out_prefix

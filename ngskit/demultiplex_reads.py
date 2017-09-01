@@ -383,9 +383,13 @@ def identification_method(method='standard'):
                 # it will check
                 # (insertions)
                 over_end += barcode.trgt_len
-
+                # Control dynamic length, speed up on assambled Reverse&Forward
+                # and diff population of sequences
+                if over_end + barcode.b1_len + barcode.c1_len > len(read_seq):
+                    return read_map
                 # FLOATING WINDOW
-                # start from the very edge of the cons region 1 (empty vectors)
+                # start searching from the very edge of the cons region 1 (empty vectors)
+                # and end  a bit further (insertions)
                 for var_target_len in range(over_end):
 
                     # extract constant region 2, using float window

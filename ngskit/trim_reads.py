@@ -85,7 +85,7 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
             # Read seq and Quality info
             read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
             #Translate the Quality to a list of Integers
-            qual = [ord(c)-33 for c in read1_qual.rstrip("\n")]
+            qual = [ord(c)-33 for c in read1_qual.strip()]
 
             target_sequence = read1_seq[barcode.b1_len+barcode.c1_len:
                                         barcode.b1_len+barcode.c1_len+trgt_len]
@@ -94,7 +94,12 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
                                         barcode.b1_len+barcode.c1_len+trgt_len]
             nseqs += 1
             # Control
-            avg_quality = sum(target_qual)/float(len(target_qual))
+            try:
+                avg_quality = sum(target_qual)/float(len(target_qual))
+            except ZeroDivisionError:
+                logger.error('Sequence with no lenght or no score')
+                logger.error(read1_seq,read1_qual,target_qual,target_qual,trgt_len)
+                sys.exit()
             if len(target_sequence) == trgt_len and avg_quality >= quality_threshold:
 
                 ntrimed += 1
@@ -225,18 +230,20 @@ def workflow(opts):
                 # read lenght from the filename
                 seq_length = get_length_label(demultiplexed_fastq)
                 # modifiy target size
+                # Skip empty vectors
+                if seq_length:
+                    # modify output folder
+                    dir_emultiplexed_fastq = working_folder+demultiplexed_fastq
+                    # trim!
+                    trimming(dir_emultiplexed_fastq,
+                            barcode,
+                            quality_threshold= opts.quality,
+                            trgt_len= seq_length,
+                            output_fmt= opts.output_fmt,
+                            output_folder=output_folder+'_'+str(seq_length))
+                    # raw_name = demultiplexed_file.replace('_F.fastq','')
+                    # read the length from the file
 
-                # modify output folder
-                dir_emultiplexed_fastq = working_folder+demultiplexed_fastq
-                trimming(dir_emultiplexed_fastq,
-                        barcode,
-                        quality_threshold= opts.quality,
-                        trgt_len= seq_length,
-                        output_fmt= opts.output_fmt,
-                        output_folder=output_folder+'_'+str(seq_length))
-                # raw_name = demultiplexed_file.replace('_F.fastq','')
-                # read the length from the file
-                pass
 
             elif opts.trimming_method == 'standard':
 
