@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import logging
+import string
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +58,31 @@ class Barcode(object):
         self.trgt_len = int(arg[4].strip())
         self._calc_lens()
 
+        self.elements = {'b1':self.b1_seq,
+                        'c1':self.c1_seq,
+                        'c2':self.c2_seq
+                        'b2':self.b2_seq}
+
     def _calc_lens(self):
+
         self.b1_len = len(self.b1_seq)
         self.c1_len = len(self.c1_seq)
         self.b2_len = len(self.b2_seq)
         self.c2_len = len(self.c2_seq)
 
         return
+
+
+    def sanity_check(self):
+        
+        for element, seq in self.elements.items():
+            for n in seq:
+                if n is not in ['A', "C", 'T', 'G']:
+                    print('WARNING CHECK: {} {}', element, seq)
+
+
+        
+
 
 
 def read(barcode_file):
@@ -99,9 +118,8 @@ def read(barcode_file):
                     name = data[0].strip()
                     # Forward-Barcode, Barcode-2-Reversed, Konstant_region1, Konstant_region2-Reversed
                     barcodes.append(Barcode(name, [data[1].strip(), data[2].strip(),
-                                                   data[3].strip(), data[
-                        4].strip(),
-                        data[5].strip()]))
+                                                   data[3].strip(), data[4].strip(),
+                                                   data[5].strip()]))
 
                     logger.info('BARCODE {} > b1:{} c1:{} c2:{} b1:{} target:{}'.format(name,
                                                                                         data[
@@ -131,21 +149,40 @@ def read(barcode_file):
                                Barcode-2, Constant_region2''')
                     print(data)
 
+    # quick validation    
+    for b in barcodes:
+        b.sanity_check()
+
     return barcodes
 
 
-def validate(data):
-    """Validate presence of Nucleotides.
+def hamdist(str1, str2):
+    diffs = 0
+    if len(str1) != len(str2):
+        return max(len(str1),len(str2))
+    for ch1, ch2 in zip(str1, str2):
+        if ch1 != ch2:
+            diffs += 1
 
-    Parameters
-    ----------
+    return diffs
 
-    Returns
-    -------
+def find_min(seq_bag):
+    dmin=len(seq_bag[0])
+    for i in xrange(len(seq_bag)):
+        for j in xrange(i+1,len(seq_bag)):
+                dist=hamdist(seq_bag[i][:-1], seq_bag[j][:-1])
+                if dist < dmin:
+                        dmin = dist
 
-    """
+def recomend_mininal(barcodes, token):
+    seq_bag =list()
+    #for token in ['b1','c1', 'b2','c2']:
+    for barcode in barcodes:
+        seq_bag.append(barcode.elements[token])
+    minim = find_min(seq_bag)
 
-    pass
+    return minim + 1
+
 
 if __name__ == '__main__':
     # split barcodes files in individual files
@@ -181,7 +218,11 @@ if __name__ == '__main__':
         template_file_name = 'to_demultiplex'
     # for sample in the excel write a single barcode file to feed the demultiplexation
     # script
+    poll = list()
     for idx in range(excel_barcode.shape[0]):
         excel_barcode.iloc[idx:idx + 1].to_csv('{}_{}.barcode'.format(template_file_name, idx),
                                                index=False,
                                                header=False, sep='\t')
+
+        b = read('{}_{}.barcode'.format(template_file_name, idx))
+        poll.append(b)
