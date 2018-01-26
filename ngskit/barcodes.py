@@ -219,7 +219,7 @@ if __name__ == '__main__':
     # for sample in the excel write a single barcode file to feed the demultiplexation
     # script
     poll = list()
-    for idx in range(excel_barcode.shape[0]):
+    for idx in range(excel_barcode.shape[0])::
         excel_barcode.iloc[idx:idx + 1].to_csv('{}_{}.barcode'.format(template_file_name, idx),
                                                index=False,
                                                header=False, sep='\t')
