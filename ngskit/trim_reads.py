@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 from __future__ import division
 import os
@@ -8,7 +9,6 @@ import time
 
 import barcodes
 from utils import fasta_tools, fastq_tools
-
 
 def create_folder(output_folder):
     # Create output folder

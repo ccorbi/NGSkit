@@ -1,8 +1,9 @@
+
 from __future__ import print_function
 import os
 import sys
 import pandas as pd
-import Levenshtein as leven
+import Levenshtein as Leven
 import logging
 import argparse
 import time
@@ -105,7 +106,7 @@ def match(seq, target, cutoff):
 
     '''
     cutoff = int(cutoff)
-    distance = leven.distance(seq, target)
+    distance = Leven.distance(seq, target)
 
     if distance > cutoff:
 
@@ -131,7 +132,7 @@ def count_mismatches(seq, target):
     int
         Mismatches
     '''
-    distance = leven.distance(seq, target)
+    distance = Leven.distance(seq, target)
 
     return distance
 
