@@ -419,9 +419,9 @@ class peptide_library(object):
 
         return
 
-    def generate_inframe_variants(self, frame_size=2, **kwargs):
+    def generate_inframe_variants(self, frame_size=2, frame_interval=1, **kwargs):
         """From a sequence (string), return a dictionary of  muntats in frame
-
+        TODO: change name to mutation screening, merge with generate_single_mutation
         Parameters
         ----------
 
@@ -437,7 +437,7 @@ class peptide_library(object):
             inrange : list, tuple
                 [start,end] coordinates inside the seq by default full length
             bias : list
-                list wiht ['A','W'] aminoacids excluded
+                list of aminoacids to exclude, i.e. ['A','W'] 
 
         Returns
         -------
@@ -451,7 +451,7 @@ class peptide_library(object):
 
         suffix = kwargs.get('suffix', '_FM_')
 
-        for itera in t.frame_mutations(**kwargs):
+        for itera in t.frame_mutations(frame_size=frame_size, frame_interval=frame_interval, **kwargs):
 
             a = ''.join(itera)
 
@@ -463,7 +463,7 @@ class peptide_library(object):
 
         return
 
-    def generate_random_variants(self, how_many=1000, mutant_kind=[2], **kwargs):
+    def generate_random_variants(self, n=1000, mutant_kind=[2], **kwargs):
         """From a sequence (string), return a dictionary of random muntats.
 
         Parameters
@@ -497,10 +497,10 @@ class peptide_library(object):
         suffix = kwargs.get('suffix', '_RA_')
 
         counter = 0
-        while counter < how_many:
+        while counter < n:
             for i in mutant_kind:
                 # Soft random, at least 50% of the wildtype
-                random_mutation = t.soft_randomization(num_mutations=i, **kwargs)
+                random_mutation = t.soft_randomization(num_mutations=i, inrange = kwargs.get('inrange', False), bias= kwargs.get('bias', False))
 
                 if not random_mutation in self._aalibrary:
                     # check library limit
@@ -794,12 +794,29 @@ class Template(object):
 
         return random_mutation
 
-    def frame_mutations(self, frame_size=2, inrange=False, shared_bias=False, **Kargs):
+    def frame_mutations(self, frame_size=2, frame_interval=1, inrange=False, shared_bias=False,  **Kargs):
         """This method, return a sequence of corraleted mutations. Need improvement
         suport more than a pair frame, allow  specific bias for each position.
 
         Paramenters
         -----------
+
+        frame_size : int
+            Number of positions to mutate in frame
+
+        frame_interval : int
+            Number of positions between inframe mutations
+            (by default 1, means neighbour positions, 3 o 4 for helix is recommended)
+
+        inrange : list, or tuple
+            list or tuple with [start,end] coordinates inside the seq
+            (by default full length)
+
+        
+        shared_bias : Bool
+            Aminoacids excluded (bias) is it shared
+
+        
 
         Yields
         ------
@@ -814,11 +831,11 @@ class Template(object):
             end = inrange[1] - 1
 
         for i in range(start, end + 1):
-            if i != end:
+            if i != end and i+frame_interval<end:
                 for aa1 in self.get_aa_list(i, bias=shared_bias, **Kargs):
-                    for aa2 in self.get_aa_list(i + 1, bias=shared_bias, **Kargs):
+                    for aa2 in self.get_aa_list(i + frame_interval, bias=shared_bias, **Kargs):
 
-                        yield self.mod_template([i, i + 1], [aa1, aa2])
+                        yield self.mod_template([i, i + frame_interval], [aa1, aa2])
 
 
 def check_lib_integrty(file_library, master_seq, oligo_length,
