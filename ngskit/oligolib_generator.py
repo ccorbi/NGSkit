@@ -45,11 +45,12 @@ import sys
 import random
 import itertools
 import json
-import Levenshtein as ltein
 import logging
 import argparse
 import time
 
+from collections import OrderedDict
+import Levenshtein as ltein
 from ngskit.utils.dna import (translate2aa, translate2na, clean_restriction_sites)
 
 
@@ -163,7 +164,7 @@ class peptide_library(object):
 
         # Init Internal Variables
 
-        self._aalibrary = dict()
+        self._aalibrary = OrderedDict()
 
         if self.include_template:
 
@@ -411,11 +412,7 @@ class peptide_library(object):
             for itera in self.template.get_all_mutants_in(eachposition, **kwargs):
 
                 a = ''.join(itera)
-                # if the peptide exist in the library ignore
-                if not a in self._aalibrary:
-                    # check library limit
-                    if self._lib_notfull() is False:
-                        self._aalibrary[a] = self._name_seq(suffix=suffix)
+                self._add_variant(a, suffix=suffix)
 
         return
 
@@ -454,12 +451,7 @@ class peptide_library(object):
         for itera in t.frame_mutations(frame_size=frame_size, frame_interval=frame_interval, **kwargs):
 
             a = ''.join(itera)
-
-            if not a in self._aalibrary:
-                # check library limit
-                if self._lib_notfull() is False:
-                    self._aalibrary[a] = self._name_seq(suffix=suffix)
-
+            self._add_variant(a, suffix=suffix)
 
         return
 
@@ -470,8 +462,8 @@ class peptide_library(object):
         ----------
 
 
-        lib_limit : int, (default 1000)
-            maximum size of the lib. mutamnts adde to the lib is current size - limit
+        n : int, (default 1000)
+             how many random variants, if lib limit is reach it will stop
         mutant_kind : list
             Kind of mutants, double, triple, etc (list, by default double mutants [2])
         inrange: list, tuple
@@ -502,14 +494,46 @@ class peptide_library(object):
                 # Soft random, at least 50% of the wildtype
                 random_mutation = t.soft_randomization(num_mutations=i, inrange = kwargs.get('inrange', False), bias= kwargs.get('bias', False))
 
-                if not random_mutation in self._aalibrary:
-                    # check library limit
-                    if self._lib_notfull() is False:
-                        self._aalibrary[random_mutation] = self._name_seq(suffix=suffix)
-                        counter += 1
+                if self._add_variant(random_mutation, suffix=suffix):
+                    counter += 1
 
 
         return
+
+
+    def generate_scrambled_variants(self, n=1000, suffix= '_SC_'):
+        """From a sequence (string), return a dictionary of random muntats.
+
+        Parameters
+        ----------
+
+
+        n : int, (default 1000)
+             how many scrambled variants, if lib limit is reach it will stop
+        mutant_kind : list
+
+
+        Returns
+        -------
+
+
+
+        """
+
+
+        if not self.template:
+            raise Exception('A template must be defined to use this method')
+
+
+        counter = 0
+        while counter < n:
+                scram_pep = self.template.scrambled()
+                if self._add_variant(scram_pep, suffix=suffix):
+                    counter += 1
+
+
+        return
+
 
     def single_json(self, jsonpath):
 
@@ -537,14 +561,12 @@ class peptide_library(object):
         for i in itertools.product(*permutation):
             variant = ''.join(list(i))
 
-            if not variant in self._aalibrary:
-                # check library limit
-                if self._lib_notfull() is False:
-                    self._aalibrary[variant] = self._name_seq(suffix=suffix)
+            self._add_variant(variant, suffix=suffix)
 
         return
 
 
+###########
     def _name_seq(self, suffix):
         # Get index
         index_id = len(self._aalibrary)
@@ -570,6 +592,17 @@ class peptide_library(object):
                 return False
         else:
             return False
+
+
+    def _add_variant(self, var, suffix='_MA_'):
+
+
+        if not var in self._aalibrary:
+            # check library limit
+            if self._lib_notfull() is False:
+                self._aalibrary[var] = self._name_seq(suffix=suffix)
+                return True
+        return False
 
 ###########
 
@@ -836,6 +869,27 @@ class Template(object):
                     for aa2 in self.get_aa_list(i + frame_interval, bias=shared_bias, **Kargs):
 
                         yield self.mod_template([i, i + frame_interval], [aa1, aa2])
+
+    def scrambled(self):
+        """Generate a random scrambled peptide from the template.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        str
+
+        """
+        scram = list()
+        seq = [x for x in self.seq]
+        random.shuffle(seq)
+        
+        for a in seq:
+            scram.append(a)
+
+        return ''.join(scram)
 
 
 def check_lib_integrty(file_library, master_seq, oligo_length,
