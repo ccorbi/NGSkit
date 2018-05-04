@@ -60,7 +60,7 @@ class Barcode(object):
 
         self.elements = {'b1':self.b1_seq,
                         'c1':self.c1_seq,
-                        'c2':self.c2_seq
+                        'c2':self.c2_seq,
                         'b2':self.b2_seq}
 
     def _calc_lens(self):
@@ -77,7 +77,7 @@ class Barcode(object):
         
         for element, seq in self.elements.items():
             for n in seq:
-                if n is not in ['A', "C", 'T', 'G']:
+                if n not in ['A', "C", 'T', 'G']:
                     print('WARNING CHECK: {} {}', element, seq)
 
 
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     # for sample in the excel write a single barcode file to feed the demultiplexation
     # script
     poll = list()
-    for idx in range(excel_barcode.shape[0])::
+    for idx in range(excel_barcode.shape[0]):
         excel_barcode.iloc[idx:idx + 1].to_csv('{}_{}.barcode'.format(template_file_name, idx),
                                                index=False,
                                                header=False, sep='\t')
