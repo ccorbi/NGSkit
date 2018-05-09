@@ -228,9 +228,13 @@ def mi_matrix(sequences, n_jobs=4):
     for i in range(N):
         for j in range(i,N):
 
-            mutualinfo = mutual_information(sequences, frequencies, i, j )
-            mi_matrix.at[i,j]= mutualinfo
-            mi_matrix.at[j,i]= mutualinfo
+            if i!=j:
+                mutualinfo = mutual_information(sequences, frequencies, i, j )
+                mi_matrix.at[i,j]= mutualinfo
+                mi_matrix.at[j,i]= mutualinfo
+            else:
+                mi_matrix.at[i,j]= 0.0
+                mi_matrix.at[j,i]= 0.0
 
         #with Pool() as p:
         #    func = partial(calc_mutual,
@@ -322,7 +326,7 @@ def mutual_informationm(sequences, frequencies,  i, j , n_jobs=8 ):
     """To identify correlated positions in peptide alignments, we used
     mutual information for all possible position pairs. Mutual information is computed as:.
 (j)
-    MI = sum 1-20 sum 1-20 p(i,j) log {P(i,j)/ P1i P2}
+    MI = sum 1-20 sum 1-20 p(i,j) log {P(i,j)/ P1i P2j}
 
     where P(i,j) stands for the probability of having amino acid i at one position together
     with amino acid j at the other position in a peptide. P1(i) is the probability of having amino
