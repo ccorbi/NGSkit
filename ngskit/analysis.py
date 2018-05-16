@@ -1,16 +1,19 @@
 """
 Collection of tools for sequence analysis
 """
+import random
+from multiprocessing import Pool
+from functools import partia
+
+import pandas as pd
+import numpy as np
 import sklearn.metrics
 import sklearn.cluster
 from sklearn.cluster import AgglomerativeClustering
-
 from sklearn.metrics import  silhouette_score
 from Bio.SubsMat import MatrixInfo
 
-import pandas as pd
-from multiprocessing import Pool
-from functools import partial
+l
 
 #
 # - PSSM
@@ -501,3 +504,15 @@ def benchmark_clustering(matrix, limit=10, clustering_algorithm = AgglomerativeC
     #                                                  axis=1 )
 
     return labeled_matrix
+
+
+def rand_peptide(n=7):
+
+    AA = ["A", "R", "N", "D", "C", "E", "Q", "G", "H", "I", "L", "K", 
+          "M", "F", "P", "S", "T", "W", "Y", "V"]
+    rpep = list()
+
+    for i in range(n):
+        rpep.append(random.choice(AA))
+
+    return ''.join(rpep)

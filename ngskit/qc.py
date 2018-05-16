@@ -29,3 +29,20 @@ def gini(reads):
         area += height - value / 2.
     fair_area = height * len(reads) / 2.
     return (fair_area - area) / fair_area
+
+
+def read_fastq(inputfile):
+
+    quality = list()
+    with open(inputfile, 'r') as read1:
+
+        for read1_id in read1:
+            # Read 4 by 4
+            # ID lane info, seq info etc
+            # Read seq and Quality info
+
+            read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
+            qual = [ord(c)-33 for c in read1_qual.strip()]
+            quality.append(qual)
+
+    return quality

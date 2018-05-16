@@ -5,7 +5,8 @@ requirements = [
             'pandas',
             'numpy',
             'scikit-learn',
-            'pandas']
+            'python-Levenshtein',
+            'biopython']
 
 
 setup(
@@ -16,7 +17,6 @@ setup(
     author_email='carles.corbi@kimlab.org',
     url = "http://kimlab.org",
     description = ("Small kit of Tools for preprocess NGS data. Customize for Kimlab's data pipelines"),
-    packages=['ngskit','ngskit.utils','tests'],
     install_requires=requirements,
     
     classifiers=[
@@ -25,6 +25,15 @@ setup(
        "Topic :: Scientific/Engineering :: Bio-Informatics",
        ],
     license='MIT',
+
+    entry_points={
+        'console_scripts': [
+                'demultiplexer = ngskit.demultiplex_reads:main',
+                'trimer = ngskit.trim_reads:main',
+                'barcodes = ngskit.barcodes:main',
+                'counterreads = ngskit.counter_reads:main',
+        ]
+    }
 
 
 

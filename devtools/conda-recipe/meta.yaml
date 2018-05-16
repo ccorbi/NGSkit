@@ -17,8 +17,10 @@ requirements:
   run:
     - python
     - python-levenshtein
+    - numpy
     - pandas
     - scikit-learn
+    - biopython
 
 
 
