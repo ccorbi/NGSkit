@@ -1,6 +1,15 @@
 from __future__ import print_function
 from __future__ import division
 
+import logging
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+logger = logging.getLogger(__name__)
+
+
 def gini(reads):
     """Gini index for a set of reads.
 
@@ -46,3 +55,102 @@ def read_fastq(inputfile):
             quality.append(qual)
 
     return quality
+
+
+class Stats(object):
+    """Init dataframe to Save frequencies.
+
+    Parameters
+    ----------
+    barcodes : list, iterable
+        contains barcode objects to demultiplex sequneces
+
+    Returns
+    -------
+    DataFrame
+
+    idx       b1  c1  c2  b2 target_len1 ... target_lenX
+    sample1
+    sample2
+    ...
+    sampleX
+
+    """
+    def __init__(self, barcodes_list):
+        super(Stats, self).__init__()
+        
+        index_ids = []
+        columns_id = ['b1', 'c1', 'c2', 'b2']
+        for barcode in barcodes_list:
+
+            index_ids.append(barcode.id)
+            if not str(barcode.trgt_len) in columns_id:
+                columns_id.append(str(barcode.trgt_len))
+
+        # init stats
+
+        self._stats = pd.DataFrame(index=index_ids, columns=columns_id)
+        self._stats.fillna(0, inplace=True)
+
+
+    def write_freqs(self, read, barcode):
+        """Update frequencies in the DataFrame.
+
+        Parameters
+        ----------
+        read : dict
+            Dict from the identification fuction with information about the match
+        barcode : object
+
+        Returns
+        -------
+        DataFrame
+
+        """
+        if read['b1'] != '':
+            # Seq match barcode 1 (+1)
+            self._stats.at[barcode.id, 'b1'] = self._stats.at[barcode.id,
+                                                        'b1'] + 1
+        if read['c1'] != '':
+            # Seq match conc 1 (+1)
+            self._stats.at[barcode.id, 'c1'] = self._stats.at[barcode.id,
+                                                        'c1'] + 1
+        if read['c2'] != '':
+            # Seq match conc 2 (+1)
+            self._stats.at[barcode.id, 'c2'] = self._stats.at[barcode.id,
+                                                        'c2'] + 1
+        if read['b2'] != '':
+            # Seq match barcode 2 (+1)
+            self._stats.at[barcode.id, 'b2'] = self._stats.at[barcode.id,
+                                                        'b2'] + 1
+        # Target sequnces, length +1
+        if read['map']:
+            if str(read['target_len']) in self._stats.columns:
+                self._stats.at[barcode.id,
+                            str(read['target_len'])] = self._stats.at[barcode.id,
+                                                                    str(read['target_len'])] + 1
+
+            else:
+                self._stats.at[barcode.id, str(read['target_len'])] = 1
+                self._stats.fillna(0, inplace=True)
+
+    def save(self, name):
+        
+        self._stats.to_csv(name+'.csv')
+
+
+
+def plot_readslens(stats_df,  sample_name):
+   
+    fig, ax = plt.subplots(figsize=(20,10))
+
+    df = stats_df[stats_df['Sample']==sample_name]
+    del df['Sample']
+    df.columns = df.columns.astype(int,copy=False)
+    df.sort_index(axis=1, inplace=True)
+    ax.bar(df.columns,df.get_values()[0])
+    ax.set_title(sample_name)
+    plt.xticks(df.columns , df.columns, rotation='vertical')
+
+    fig.savefig(sample_name+'_readlens.png')
+    plt.close(fig)

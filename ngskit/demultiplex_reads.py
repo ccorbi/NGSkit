@@ -9,6 +9,7 @@ import argparse
 import time
 
 import barcodes
+import qc
 
 
 class Output_agent(object):
@@ -161,7 +162,8 @@ def identification_method(method='standard'):
 
 
     """
-
+    logger = logging.getLogger(__name__)
+    
     def quick(read_seq, barcode, **Kargs):
         """Sequence selected if Barcode and constant region 1 are there.
 
@@ -471,7 +473,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
 
     if save_frequencies:
         # create pandas file to save stats or go to the log file
-        gbl_stats = init_freqs_track(barcodes_list)
+        gbl_stats = qc.Stats(barcodes_list)
     # Temporal, to finish
     dump = Kargs.get('dump', False)
 
@@ -502,7 +504,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                     pass
                 if save_frequencies:
                     # save
-                    gbl_stats = write_freqs(read_match_info, barcode, gbl_stats)
+                    gbl_stats.write_freqs(read_match_info, barcode)
                     pass
     # close
     output.close()
@@ -511,93 +513,14 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
         # write file
         time_stamp = time.ctime()
         fastq_file_name = os.path.basename(inputfile)
-
-        gbl_stats.to_csv('Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] +'_{4}_{1}_{2}_{0}_{3}.csv'.format(*time_stamp.split()))
+        time_out = '{4}_{1}_{2}_{0}_{3}'.format(*time_stamp.split())
+        fstats_name =  'Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] + time_out
+        gbl_stats.save(fstats_name)
 
     return
 
 
 
-
-
-def init_freqs_track(barcodes_list):
-    """Init dataframe to Save frequencies.
-
-    Parameters
-    ----------
-    barcodes : list, iterable
-        contains barcode objects to demultiplex sequneces
-
-    Returns
-    -------
-    DataFrame
-
-    idx       b1  c1  c2  b2 target_len1 ... target_lenX
-    sample1
-    sample2
-    ...
-    sampleX
-
-    """
-    index_ids = []
-    columns_id = ['b1', 'c1', 'c2', 'b2']
-    for barcode in barcodes_list:
-
-        index_ids.append(barcode.id)
-        if not str(barcode.trgt_len) in columns_id:
-            columns_id.append(str(barcode.trgt_len))
-
-    # init stats
-
-    gbl_stats = pd.DataFrame(index=index_ids, columns=columns_id)
-    gbl_stats.fillna(0, inplace=True)
-    logger.debug(gbl_stats)
-
-    return gbl_stats
-
-
-def write_freqs(read, barcode, gbl_stats):
-    """Update frequencies in the DataFrame.
-
-    Parameters
-    ----------
-    read : dict
-        Dict from the identification fuction with information about the match
-    barcode : object
-
-    Returns
-    -------
-    DataFrame
-
-    """
-    if read['b1'] != '':
-        # Seq match barcode 1 (+1)
-        gbl_stats.at[barcode.id, 'b1'] = gbl_stats.at[barcode.id,
-                                                      'b1'] + 1
-    if read['c1'] != '':
-        # Seq match conc 1 (+1)
-        gbl_stats.at[barcode.id, 'c1'] = gbl_stats.at[barcode.id,
-                                                      'c1'] + 1
-    if read['c2'] != '':
-        # Seq match conc 2 (+1)
-        gbl_stats.at[barcode.id, 'c2'] = gbl_stats.at[barcode.id,
-                                                      'c2'] + 1
-    if read['b2'] != '':
-        # Seq match barcode 2 (+1)
-        gbl_stats.at[barcode.id, 'b2'] = gbl_stats.at[barcode.id,
-                                                      'b2'] + 1
-    # Target sequnces, length +1
-    if read['map']:
-        if str(read['target_len']) in gbl_stats.columns:
-            gbl_stats.at[barcode.id,
-                         str(read['target_len'])] = gbl_stats.at[barcode.id,
-                                                                 str(read['target_len'])] + 1
-
-        else:
-            gbl_stats.at[barcode.id, str(read['target_len'])] = 1
-            gbl_stats.fillna(0, inplace=True)
-
-    return gbl_stats
 
 
 def dump(self, option):
@@ -627,6 +550,8 @@ def makeoutputdirs(barcode_list, output_dir):
 
 
     """
+    logger = logging.getLogger(__name__)
+
     for sample in barcode_list:
         # Make folders for each barcode
         out_folder = os.path.join(output_dir, sample.id).replace('\\', '/')
@@ -733,7 +658,7 @@ def get_options():
     return options
 
 
-def workflow(opts):
+def main():
     """Pipeline Control.
 
     Parameters
@@ -742,6 +667,23 @@ def workflow(opts):
 
 
     """
+
+    # Read argtments
+    opts = get_options()
+
+    # init logging
+    time_stamp = time.ctime()
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename= 'Dmultplx_'+opts.out_dir+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filemode='w')
+
+    logger = logging.getLogger(__name__)
+
+    logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+
+
     # Check inputs
     # FASTAQ
     fastqs = opts.input_fastqs
@@ -778,28 +720,15 @@ def workflow(opts):
         single_end(fastq, barcodes_list, **opts.__dict__)
         logger.info('next...' )
 
-    return
 
 
-def main():
-    # Read argtments
-    opts = get_options()
-
-    # init logging
-    time_stamp = time.ctime()
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        datefmt='%m-%d %H:%M',
-                        filename= 'Dmultplx_'+opts.out_dir+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
-                        filemode='w')
-    logger = logging.getLogger(__name__)
-
-    logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
-    # DEMULTIPLEX
-    workflow(opts)
     # DONE
     time_stamp = time.ctime()
     logger.info('JOB ENDS {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+
+
+    return
+
 
 if __name__ == '__main__':
     main()

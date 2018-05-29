@@ -117,9 +117,7 @@ def read(barcode_file):
                 if len(data) >= 6:
                     name = data[0].strip()
                     # Forward-Barcode, Barcode-2-Reversed, Konstant_region1, Konstant_region2-Reversed
-                    barcodes.append(Barcode(name, [data[1].strip(), data[2].strip(),
-                                                   data[3].strip(), data[4].strip(),
-                                                   data[5].strip()]))
+                    barcodes.append(Barcode(name, data[1:]))
 
                     logger.info('BARCODE {} > b1:{} c1:{} c2:{} b1:{} target:{}'.format(name,
                                                                                         data[
@@ -168,8 +166,8 @@ def hamdist(str1, str2):
 
 def find_min(seq_bag):
     dmin=len(seq_bag[0])
-    for i in xrange(len(seq_bag)):
-        for j in xrange(i+1,len(seq_bag)):
+    for i in range(len(seq_bag)):
+        for j in range(i+1,len(seq_bag)):
                 dist=hamdist(seq_bag[i][:-1], seq_bag[j][:-1])
                 if dist < dmin:
                         dmin = dist
@@ -217,12 +215,13 @@ if __name__ == '__main__':
     else:
         template_file_name = 'to_demultiplex'
     # for sample in the excel write a single barcode file to feed the demultiplexation
-    # script
-    poll = list()
     for idx in range(excel_barcode.shape[0]):
         excel_barcode.iloc[idx:idx + 1].to_csv('{}_{}.barcode'.format(template_file_name, idx),
                                                index=False,
                                                header=False, sep='\t')
 
-        b = read('{}_{}.barcode'.format(template_file_name, idx))
-        poll.append(b)
+        try:
+            b = read('{}_{}.barcode'.format(template_file_name, idx))
+        except:
+            print('Error in the barcodes Format')
+    
