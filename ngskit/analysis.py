@@ -3,7 +3,7 @@ Collection of tools for sequence analysis
 """
 import random
 from multiprocessing import Pool
-from functools import partia
+from functools import partial
 
 import pandas as pd
 import numpy as np
@@ -13,7 +13,8 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import  silhouette_score
 from Bio.SubsMat import MatrixInfo
 
-l
+AMINOACIDS = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
+    "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W", ]
 
 #
 # - PSSM
@@ -64,10 +65,8 @@ def get_ppm(sequences, pseudocounts= 1.5):
 
     """
 
-    amino = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
-    "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W", "-"]
 
-    frequencies = get_aa_freq(sequences)
+    frequencies = get_pfm(sequences)
 
 
     N = len(sequences) + pseudocounts
@@ -76,7 +75,7 @@ def get_ppm(sequences, pseudocounts= 1.5):
     seq_len = len(sequences[0])
     matrix = list()
 
-    for a in amino:
+    for a in AMINOACIDS:
         # row = [a]
         row = list()
         for p in range(seq_len):
@@ -84,13 +83,13 @@ def get_ppm(sequences, pseudocounts= 1.5):
         matrix.append(row)
 
     # convert to pandas.Dataframe
-    m = pd.DataFrame(matrix, index=amino,columns=list(range(seq_len)))
+    m = pd.DataFrame(matrix, index=AMINOACIDS,columns=list(range(seq_len)))
 
     return m
 
 
 
-def get_pwm(sequences):
+def get_pwm(sequences,  pseudocounts= 1.5):
     """Generate Position Weights Matrix
 
     Parameters
@@ -107,29 +106,29 @@ def get_pwm(sequences):
 
     """
 
-    amino = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
-             "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W"]
+
 
     frequencies = get_pfm(sequences)
-    # logger.debug(frequencies)
 
-    N = len(sequences)
+
+    N = len(sequences) + pseudocounts
+
     # get first element of the dict without know keys
     seq_len = len(sequences[0])
     matrix = list()
-    for a in amino:
+
+    for a in AMINOACIDS:
         # row = [a]
         row = list()
         for p in range(seq_len):
-            prob = frequencies[p].get(a, 0.0)/N
+            prob = (frequencies[p].get(a, 0.0 ) + (pseudocounts/ 20 ) )/N
             row.append(np.log2(prob/.05))
         matrix.append(row)
 
     # convert to pandas.Dataframe
-    m = pd.DataFrame(matrix, index=amino,columns=list(range(seq_len)))
-    # logger.debug(m)
-    return m
+    m = pd.DataFrame(matrix, index=AMINOACIDS,columns=list(range(seq_len)))
 
+    return m
 
 def binding_score(seq, pwm):
     """Score a sequence using a PWM.
@@ -182,31 +181,31 @@ def dist_PWM(pwm1, pwm2):
 
 
 def entropy(sequences):
-"""return a array with entropy for each postion.
+    """return a array with entropy for each postion.
 
-Parameters
-----------
-ppm: pandas.DataFrame()
+    Parameters
+    ----------
+    ppm: pandas.DataFrame()
 
-Returns
--------
-array
+    Returns
+    -------
+    array
 
-"""
+    """
 
-ppm = get_ppm(sequences)
-entropy_vec = np.empty(ppm.shape[1])
-# for position
-for idx, a in enumerate(ppm.columns):
-    e = np.empty(ppm.shape[0])
-    # get entropy for all aminoacids
-    for jdx, i in enumerate(ppm.index.get_values()):
-        prob = ppm.at[i,a]
-        e[jdx] = prob*(np.log(prob)/np.log(20))
+    ppm = get_ppm(sequences)
+    entropy_vec = np.empty(ppm.shape[1])
+    # for position
+    for idx, a in enumerate(ppm.columns):
+        e = np.empty(ppm.shape[0])
+        # get entropy for all aminoacids
+        for jdx, i in enumerate(ppm.index.get_values()):
+            prob = ppm.at[i,a]
+            e[jdx] = prob*(np.log(prob)/np.log(20))
 
-    entropy_vec[idx] = -1 * np.nansum(e)
+        entropy_vec[idx] = -1 * np.nansum(e)
 
-return entropy_vec
+    return entropy_vec
 
 def mi_matrix(sequences, n_jobs=4):
 
@@ -294,15 +293,14 @@ def mutual_information(sequences, frequencies,  i, j  ):
     """
 
 
-    aminoacids = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
-    "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W"]
+
 
     N= float(len(sequences))
 
     suma = np.zeros([20,20])
 
-    for idx,ax in enumerate(aminoacids):
-        for jdx,ay in enumerate(aminoacids):
+    for idx,ax in enumerate(AMINOACIDS):
+        for jdx,ay in enumerate(AMINOACIDS):
             # get prob aminoacid X on postion i
             prob_ai =  float(frequencies[i].get(ax, 0.0)) / N
             # get prob aminoacid Y on position j
@@ -357,15 +355,12 @@ def mutual_informationm(sequences, frequencies,  i, j , n_jobs=8 ):
     """
 
 
-    aminoacids = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
-    "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W"]
-
     N= float(len(sequences))
 
     suma = np.zeros([20,20])
 
-    for idx,ax in enumerate(aminoacids):
-        for jdx,ay in enumerate(aminoacids):
+    for idx,ax in enumerate(AMINOACIDS):
+        for jdx,ay in enumerate(AMINOACIDS):
             # get prob aminoacid X on postion i
             prob_ai =  float(frequencies[i].get(ax, 0.0)) / N
             # get prob aminoacid Y on position j
@@ -439,7 +434,7 @@ def find_clusters_(gpf, matrix ):
 
     return ideal
 
-def generate_distance_matrix(dftemp, by='Seq', matrix=blosum):
+def generate_distance_matrix(dftemp, by='Seq', matrix=MatrixInfo.blosum62):
     rowing = dict()
     for idx,row in dftemp.iterrows():
 
@@ -508,11 +503,9 @@ def benchmark_clustering(matrix, limit=10, clustering_algorithm = AgglomerativeC
 
 def rand_peptide(n=7):
 
-    AA = ["A", "R", "N", "D", "C", "E", "Q", "G", "H", "I", "L", "K", 
-          "M", "F", "P", "S", "T", "W", "Y", "V"]
     rpep = list()
 
     for i in range(n):
-        rpep.append(random.choice(AA))
+        rpep.append(random.choice(AMINOACIDS))
 
     return ''.join(rpep)

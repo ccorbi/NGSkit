@@ -265,6 +265,7 @@ def workflow(opts):
                             output_fmt= opts.output_fmt,
                             output_folder=output_folder)
 
+            # add here, multilenghts trimmming
             elif opts.trimming_method == 'force':
                 # Todo: this option can be useful in the future
                 continue
