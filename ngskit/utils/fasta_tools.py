@@ -81,3 +81,46 @@ def to_fasta(grp_seq, output, header=False):
         for sequence in grp_seq:
             output = write_fasta_sequence(sequence, output, write_mode='a')
         output.close()
+
+
+
+        
+        
+def read_fasta(filn,proc_header=None):
+    
+    default_info = dict()
+    header = None
+    seq = list()
+    
+    with open(filn, 'r') as fn:
+        for line in fn:
+            if line[0] == '>':
+                    if proc_header:
+                        header = proc_header(header)
+                        
+                    if header:
+                        default_info[header] = ''.join(seq)
+                    header = line[1:].strip()
+                    seq = list()
+                                            
+            else:
+                seq.append(line.strip())
+    
+    default_info[header] = ''.join(seq)
+    return default_info
+
+def read_to(filename, to='dict', proc_header=None):
+    
+    default = read_fasta(filename, proc_header)
+    
+    if to == 'dict':
+        
+        return default
+    
+    elif to == 'list':
+        return list(default.values())
+    
+    elif to == 'pandas':
+        data = zip(default_info.keys(),default_info.values())
+        return pd.DataFrame(data, columns = ['ID','Seq'])
+        

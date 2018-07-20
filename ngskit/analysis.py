@@ -69,7 +69,7 @@ def get_ppm(sequences, pseudocounts= 1.5):
     frequencies = get_pfm(sequences)
 
 
-    N = len(sequences) + pseudocounts
+    N = len(sequences) 
 
     # get first element of the dict without know keys
     seq_len = len(sequences[0])
@@ -111,7 +111,7 @@ def get_pwm(sequences,  pseudocounts= 1.5):
     frequencies = get_pfm(sequences)
 
 
-    N = len(sequences) + pseudocounts
+    N = len(sequences) 
 
     # get first element of the dict without know keys
     seq_len = len(sequences[0])
@@ -509,3 +509,128 @@ def rand_peptide(n=7):
         rpep.append(random.choice(AMINOACIDS))
 
     return ''.join(rpep)
+
+
+# get simple physical properties
+def net_charge(seq):
+    
+    POS = ['R','K']
+    NEG = ['E','D']
+    charge = 0
+    for s in seq:
+        if s in POS:
+            charge +=1
+        if s in NEG:
+            charge -=1
+    return charge
+
+
+
+
+# ToDO: move it to a JSON maybe more elegant
+
+Molweights = {'A': 71.04, 'C': 103.01, 'D': 115.03, 'E': 129.04, 'F': 147.07,
+           'G': 57.02, 'H': 137.06, 'I': 113.08, 'K': 128.09, 'L': 113.08,
+           'M': 131.04, 'N': 114.04, 'P': 97.05, 'Q': 128.06, 'R': 156.10,
+           'S': 87.03, 'T': 101.05, 'V': 99.07, 'W': 186.08, 'Y': 163.06 }
+
+Hheisenberg = {
+                'A':  0.620,  'R': -2.530  , 'N': -0.780  ,'D': -0.900  ,
+                'C':  0.290  ,'Q': -0.850  ,'E': -0.740  ,'G':  0.480  ,
+                'H': -0.400  ,'I':  1.380  , 'L':  1.060  ,  'K': -1.500  ,
+                'M':  0.640  ,'F':  1.190  , 'P':  0.120  ,'S': -0.180  ,
+                'T': -0.050  ,'W':  0.810  , 'Y':  0.260  , 'V':  1.080}
+
+# kdHydrophobicity
+#A simple method for displaying the hydropathic character of a protein. Kyte J, Doolittle RF. J Mol Biol. 1982 May 5;157(1):105-32.
+kdHydrophobicity = {'I':4.5	,
+                    'V':4.2	,
+                    'L':3.8	,
+                    'F':2.8	,
+                    'C':2.5	,
+                    'M':1.9	,
+                    'A':1.8	,
+                    'G':-0.4,	
+                    'T':-0.7,	
+                    'S':-0.8,	
+                    'W':-0.9,	
+                    'Y':-1.3,	
+                    'P':-1.6,	
+                    'H':-3.2,	
+                    'E':-3.5,	
+                    'Q':-3.5,	
+                    'D':-3.5,	
+                    'N':-3.5,	
+                    'K':-3.9,	
+                    'R':-4.5,}
+
+
+# wwHydrophobicity
+#Experimentally determined hydrophobicity scale for proteins at membrane interfaces. Wimley WC, White SH. Nat Struct Biol. 1996 Oct;3(10):842-8. Attribute assignment file .txt.
+# https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/defineattrib/wwHydrophobicity.txt
+
+# hhHydrophobicity
+#Recognition of transmembrane helices by the endoplasmic reticulum translocon. Hessa T, Kim H, Bihlmaier K, Lundin C, Boekel J, Andersson H, Nilsson I, White SH, von Heijne G. Nature. 2005 Jan 27;433(7024):377-81, supplementary data. Attribute assignment file hhHydrophobicity.txt. In this scale, negative values indicate greater hydrophobicity.
+ # https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/defineattrib/hhHydrophobicity.txt
+
+# mfHydrophobicity
+#Side-chain hydrophobicity scale derived from transmembrane protein folding into lipid bilayers. Moon CP, Fleming KG. Proc Natl Acad Sci USA. 2011 Jun 21;108(25):10174-7, supplementary data. Attribute assignment file mfHydrophobicity.txt. In this scale, negative values indicate greater hydrophobicity.
+# https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/defineattrib/mfHydrophobicity.txt
+
+# ttHydrophobicity
+#An amino acid “transmembrane tendency” scale that approaches the theoretical limit to accuracy for prediction of transmembrane helices: relationship to biological hydrophobicity. Zhao G, London E. Protein Sci. 2006 Aug;15(8):1987-2001. Attribute assignment file ttHydrophobicity.txt (contributed by Shyam M. Saladi).
+
+ttHydrophobicity = {'D':  -3.27, 
+                    'E':  -2.90, 
+                    'N':  -1.62, 
+                    'Q':  -1.84, 
+                    'K':  -3.46, 
+                    'R':  -2.57, 
+                    'H':  -1.44, 
+                    'H':  -0.19, 
+                    'P':  -1.44, 
+                    'S':  -0.53, 
+                    'T':  -0.32, 
+                    'C':  -0.30, 
+                    'M':  1.40,
+                    'A':  0.38,
+                    'V':  1.46,
+                    'I':  1.97,
+                    'L':  1.82,
+                    'F':  1.98,
+                    'W':  1.53,
+                    'Y':  0.49}
+
+
+data = [ ['A', 142,   83,   66,   0.06,   0.076,  0.035,  0.058]
+,['R',  98,   93,   95,   0.070,  0.106,  0.099,  0.085]
+,['N', 101,   54,  146,   0.147,  0.110,  0.179,  0.081]
+, ['D',  67,   89,  156,   0.161,  0.083,  0.191,  0.091]
+, ['C',  70,  119,  119,   0.149,  0.050,  0.117,  0.128]
+, ['E', 151,   37,   74,   0.056,  0.060,  0.077,  0.064]
+,['Q', 111,  110,   98,   0.074,  0.098,  0.037,  0.098]
+, ['G',  57,   75,  156,   0.102,  0.085,  0.190,  0.152]
+, ['H', 100,   87,   95,   0.140,  0.047,  0.093,  0.054]
+, ['I', 108,  160,   47,   0.043,  0.034,  0.013,  0.056]
+, ['L', 121,  130,   59,   0.061,  0.025,  0.036,  0.070]
+, ['K', 114,   74,  101,   0.055,  0.115,  0.072,  0.095]
+, ['M', 145,  105,   60,   0.068,  0.082,  0.014,  0.055]
+, ['F', 113,  138,   60,   0.059,  0.041,  0.065,  0.065]
+, ['P',  57,   55,  152,   0.102,  0.301,  0.034,  0.068]
+, ['S',  77,   75,  143,   0.120,  0.139,  0.125,  0.106]
+,['T',  83,  119,   96,   0.086,  0.108,  0.065,  0.079]
+,['W', 108,  137,   96,   0.077,  0.013,  0.064,  0.167]
+, ['Y',  69,  147,  114,   0.082,  0.065,  0.114,  0.125]
+,['V', 106,  170,   50,   0.062,  0.048,  0.028,  0.053]]
+
+choufasman = pd.DataFrame(data, columns=['Aa','Sa','Sb', 'St', 'f0', 'f1','f2','f3' ])
+
+def generate_choufus(n,le=10, label = 'H'):
+    
+    probs = {'H':'Pa','E':'Pb','T':'Pt'}
+    random_cf = list()
+    for i in range(n):
+        p = [choufasman.sample(weights=probs[label], axis=0)['Aa'].get_values()[0] for k in range(le)]
+        random_cf.append(''.join(p))
+        
+    return random_cf
