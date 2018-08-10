@@ -3,8 +3,9 @@ Collection of tools for sequence analysis
 """
 import random
 from multiprocessing import Pool
+import math
 from functools import partial
-
+import subprocess
 import pandas as pd
 import numpy as np
 import sklearn.metrics
@@ -21,7 +22,7 @@ AMINOACIDS = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
 #
 
 def get_pfm(sequences):
-    """Read list of sequence  and return frequency position Matrix.
+    """Read list of sequence  and return counts position Matrix.
 
     Parameters
     ----------
@@ -69,7 +70,7 @@ def get_ppm(sequences, pseudocounts= 1.5):
     frequencies = get_pfm(sequences)
 
 
-    N = len(sequences) 
+    N = len(sequences) + pseudocounts
 
     # get first element of the dict without know keys
     seq_len = len(sequences[0])
@@ -79,7 +80,7 @@ def get_ppm(sequences, pseudocounts= 1.5):
         # row = [a]
         row = list()
         for p in range(seq_len):
-            row.append((frequencies[p].get(a, 0.0 ) + (pseudocounts/ 20 ) )/N)
+            row.append((frequencies[p].get(a, 0.0 ) + pseudocounts )/N)
         matrix.append(row)
 
     # convert to pandas.Dataframe
@@ -89,7 +90,7 @@ def get_ppm(sequences, pseudocounts= 1.5):
 
 
 
-def get_pwm(sequences,  pseudocounts= 1.5):
+def get_pwm(sequences,  pseudocounts= 1.5, background = .05):
     """Generate Position Weights Matrix
 
     Parameters
@@ -111,7 +112,8 @@ def get_pwm(sequences,  pseudocounts= 1.5):
     frequencies = get_pfm(sequences)
 
 
-    N = len(sequences) 
+    N = len(sequences) + pseudocounts
+
 
     # get first element of the dict without know keys
     seq_len = len(sequences[0])
@@ -121,8 +123,8 @@ def get_pwm(sequences,  pseudocounts= 1.5):
         # row = [a]
         row = list()
         for p in range(seq_len):
-            prob = (frequencies[p].get(a, 0.0 ) + (pseudocounts/ 20 ) )/N
-            row.append(np.log2(prob/.05))
+            prob = (frequencies[p].get(a, 0.0 ) + pseudocounts )/N
+            row.append(np.log2(prob/background))
         matrix.append(row)
 
     # convert to pandas.Dataframe
@@ -164,6 +166,8 @@ def dist_PWM(pwm1, pwm2):
     -------
 
     """
+    # row = aa
+    # col = position
     assert pwm1.shape == pwm2.shape
 
     w = len(pwm1.columns)
@@ -173,8 +177,8 @@ def dist_PWM(pwm1, pwm2):
     for c in pwm1.columns:
         rows = list()
         for r in pwm1.index:
-            rows.append((pwm1.at[r,c]-pwm2.at[r,c])**2)
-        colum.append(sum(rows)*.5)
+            rows.append( (pwm1.at[r,c]-pwm2.at[r,c])**2) 
+        colum.append(  np.sqrt(sum(rows)))
 
     return sum(colum)/float(w)
 
@@ -193,7 +197,7 @@ def entropy(sequences):
 
     """
 
-    ppm = get_ppm(sequences)
+    ppm = get_ppm(sequences, pseudocounts=0)
     entropy_vec = np.empty(ppm.shape[1])
     # for position
     for idx, a in enumerate(ppm.columns):
@@ -534,7 +538,8 @@ Molweights = {'A': 71.04, 'C': 103.01, 'D': 115.03, 'E': 129.04, 'F': 147.07,
            'M': 131.04, 'N': 114.04, 'P': 97.05, 'Q': 128.06, 'R': 156.10,
            'S': 87.03, 'T': 101.05, 'V': 99.07, 'W': 186.08, 'Y': 163.06 }
 
-Hheisenberg = {
+#Hheisenberg
+heHydrophobicity = {
                 'A':  0.620,  'R': -2.530  , 'N': -0.780  ,'D': -0.900  ,
                 'C':  0.290  ,'Q': -0.850  ,'E': -0.740  ,'G':  0.480  ,
                 'H': -0.400  ,'I':  1.380  , 'L':  1.060  ,  'K': -1.500  ,
@@ -634,3 +639,181 @@ def generate_choufus(n,le=10, label = 'H'):
         random_cf.append(''.join(p))
         
     return random_cf
+
+
+#            generate_logo(df['Seq'], filename='./temp/3_iterative_{}_{:.5f}_{}'.format(n,q,df.shape[0]))
+def generate_logo(sequences, seq_len=80, filename='designs', title = 'Logo'):
+    """quick logo generation.
+
+    Parameters
+    ----------
+    sequences : array_like
+
+    seq_len : int
+
+
+    filename : str
+
+    Returns
+    -------
+
+    """
+    # if pass , Folder name
+    
+    #--fineprint
+    #--title
+    #--label
+
+    ohandler = open(filename + '.fasta', 'w')
+    for seq in sequences:
+        print(">{}".format(seq), file=ohandler)
+        print("{}".format(seq), file=ohandler)
+
+    ohandler.close()
+    # quick and dirty logo generartion
+    command = subprocess.Popen('weblogo -f {} -c chemistry -o {} -F PNG -n {}'
+                               ' -U bits --composition equiprobable '
+                               '--fineprint "" --title {}'.format(filename + '.fasta',
+                                                                            filename + '.png',
+                                                                            seq_len, title).split())
+    command.wait()
+
+    return
+
+
+
+# this comes from Bio.motif, need reimplementation
+# I am considering to rewrite the whole thing
+
+
+def pwm_mean(pwm):
+    b = .05
+    sx = .0
+    for col in pwm.columns:
+        for aa in pwm.index:
+            logodds = pwm.at[aa, col]
+            if math.isnan(logodds):
+                continue
+            if math.isinf(logodds) and logodds < 0:
+                continue
+            
+            p = b * math.pow(2, logodds)
+            sx += p * logodds
+    return sx
+
+def pwm_std(pwm):
+    b =.05
+    variance = 0.0
+    for i in pwm.columns:
+        sx = 0.0
+        sxx = 0.0
+        for letter in pwm.index:
+
+            logodds = pwm.at[letter, i]
+            if math.isnan(logodds):
+                continue
+            if math.isinf(logodds) and logodds < 0:
+                continue
+
+            p = b * math.pow(2, logodds)
+            sx += p * logodds
+            sxx += p * logodds * logodds
+        sxx -= sx * sx
+        variance += sxx
+    variance = max(variance, 0)  # to avoid roundoff problems
+    return math.sqrt(variance)
+
+
+class ScoreDistribution(object):
+    """Class representing approximate score distribution for a given motif.
+    Utilizes a dynamic programming approach to calculate the distribution of
+    scores with a predefined precision. Provides a number of methods for calculating
+    thresholds for motif occurrences.
+    """
+
+    def __init__(self, pwm=None, precision=10 ** 3):
+        """Initialize the class."""
+        self.min_score = sum(pwm.min())
+        self.interval = sum(pwm.max()) - self.min_score
+        self.n_points = precision * len(pwm.columns)
+        self.ic = pwm_mean(pwm)
+        self.step = self.interval / (self.n_points - 1)
+        self.mo_density = [0.0] * self.n_points
+        self.mo_density[-self._index_diff(self.min_score)] = 1.0
+        self.bg_density = [0.0] * self.n_points
+        self.bg_density[-self._index_diff(self.min_score)] = 1.0
+
+        
+        # cal
+        for pos in pwm.columns:
+            mo_new = [0.0] * self.n_points
+            bg_new = [0.0] * self.n_points
+            for letter in pwm.index:
+                bg = .05
+                score = pwm.at[letter, pos]
+                mo = pow(2, pwm.at[letter, pos]) * bg
+                d = self._index_diff(score)
+                for i in range(self.n_points):
+                    mo_new[self._add(i, d)] += self.mo_density[i] * mo
+                    bg_new[self._add(i, d)] += self.bg_density[i] * bg
+            self.mo_density = mo_new
+            self.bg_density = bg_new
+
+
+    def _index_diff(self, x, y=0.0):
+        #print(int((x - y + 0.5 * self.step) / self.step))
+        return int((x - y + 0.5 * self.step) / self.step)
+
+    def _add(self, i, j):
+        return max(0, min(self.n_points - 1, i + j))
+
+    def modify(self, scores, mo_probs, bg_probs):
+        mo_new = [0.0] * self.n_points
+        bg_new = [0.0] * self.n_points
+        for k, v in scores.items():
+            d = self._index_diff(v)
+            for i in range(self.n_points):
+                mo_new[self._add(i, d)] += self.mo_density[i] * mo_probs[k]
+                bg_new[self._add(i, d)] += self.bg_density[i] * bg_probs[k]
+        self.mo_density = mo_new
+        self.bg_density = bg_new
+
+    def threshold_fpr(self, fpr):
+        """Approximate the log-odds threshold which makes the type I error (false positive rate)."""
+        i = self.n_points
+        prob = 0.0
+        while prob < fpr:
+            i -= 1
+            prob += self.bg_density[i]
+        return self.min_score + i * self.step
+
+    def threshold_fnr(self, fnr):
+        """Approximate the log-odds threshold which makes the type II error (false negative rate)."""
+        i = -1
+        prob = 0.0
+        while prob < fnr:
+            i += 1
+            prob += self.mo_density[i]
+        return self.min_score + i * self.step
+
+    def threshold_balanced(self, rate_proportion=1.0, return_rate=False):
+        """Approximate log-odds threshold making FNR equal to FPR times rate_proportion."""
+        i = self.n_points
+        fpr = 0.0
+        fnr = 1.0
+        while fpr * rate_proportion < fnr:
+            i -= 1
+            fpr += self.bg_density[i]
+            fnr -= self.mo_density[i]
+        if return_rate:
+            return self.min_score + i * self.step, fpr
+        else:
+            return self.min_score + i * self.step
+
+    def threshold_patser(self):
+        """Threshold selection mimicking the behaviour of patser (Hertz, Stormo 1999) software.
+        It selects such a threshold that the log(fpr)=-ic(M)
+        note: the actual patser software uses natural logarithms instead of log_2, so the numbers
+        are not directly comparable.
+        """
+        return self.threshold_fpr(fpr=2 ** -self.ic)
