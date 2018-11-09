@@ -1,5 +1,45 @@
-"""FastQ tools
+"""Common set of tools for FastQ files
 """
+import gzip
+
+def read_fastq(demultiplexed_fastq, qthreshold=0):
+    """Read a fastq file, return a list of tuples seq:average_quality:quality, 
+    also filter out sequence with an average quality below  qthreshold"""
+    seqs = list()
+
+    # Q&D hack
+    if '.gz' in demultiplexed_fastq:
+        o = gzip.open
+    else:
+        o = open
+
+    with o(demultiplexed_fastq, 'r') as read1:
+        for read1_id in read1:
+            # Read 4 by 4
+            # ID lane info, seq info etc
+            # Read seq and Quality info
+            read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
+            #Translate the Quality to a list of Integers
+
+            qual = [ord(c)-33 for c in read1_qual.strip().decode()]
+
+            # Control
+            try:
+                avg_quality = sum(qual)/float(len(qual))
+            except ZeroDivisionError:
+                print('Sequence with no lenght or no score')
+                print(read1_id,read1_seq,read1_qual)
+                raise ValueError
+
+            if len(read1_seq.strip()) == len(qual) and avg_quality >= qthreshold:
+
+                seqs.append((read1_seq.strip().decode(), avg_quality, qual))
+            else:
+                # Stats
+                pass
+
+    return seqs
+
 def write_fastq_sequence(sequence_info, file_output, write_mode='a'):
     """Add sequences to a file, in Fastq Format.
 

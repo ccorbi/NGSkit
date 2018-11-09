@@ -78,7 +78,7 @@ class Barcode(object):
         for element, seq in self.elements.items():
             for n in seq:
                 if n not in ['A', "C", 'T', 'G']:
-                    print('WARNING CHECK: {} {}', element, seq)
+                    print('WARNING CHECK: {} {}'.format( element, seq))
 
 
         

@@ -7,6 +7,7 @@ import Levenshtein as Leven
 import logging
 import argparse
 import time
+import gzip
 
 import barcodes
 import qc
@@ -480,10 +481,15 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     # open barcode file handlers
     output = Output_agent(barcodes_list, out_dir)
 
-
+    # Q&D hack, need some elegan solucion for this in the future
+    #this can easy fail
+    if 'fastq.gz' in inputfile:
+        o = gzip.open
+    else:
+        o = open
 
     # Open Forward FastaQ file
-    with open(inputfile, 'r') as read1:
+    with o(inputfile, 'r') as read1:
 
         for read1_id in read1:
             # Read 4 by 4
