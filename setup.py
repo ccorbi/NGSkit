@@ -4,9 +4,12 @@ from setuptools import setup, find_packages
 requirements = [
             'pandas',
             'numpy',
+            'biopython',
+            'scipy',
+            'pytest',
             'scikit-learn',
-            'python-Levenshtein',
-            'biopython']
+            'tqdm',]
+
 
 
 setup(

@@ -17,7 +17,7 @@ import random
 import operator
 import functools
 
-from  .codons_info import *
+from  codons_info import *
 
 
 def translate2aa(nseq, start=1):
