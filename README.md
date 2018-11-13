@@ -6,6 +6,12 @@
 
 Collection basic tools to preprocess NGS data for the lab Pipelines.
 
+## Installing
+
+```bash
+pip install .
+```
+
 ## demultiplex
 
 Demultiplexation Fastq sequences tool Usage Demultiplexation:
