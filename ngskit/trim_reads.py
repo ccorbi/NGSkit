@@ -7,8 +7,8 @@ import logging
 import argparse
 import time
 
-import barcodes
-from utils import fasta_tools, fastq_tools
+import ngskit.barcodes as barcodes
+from ngskit.utils import fasta_tools, fastq_tools
 
 def create_folder(output_folder):
     # Create output folder

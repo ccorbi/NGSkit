@@ -9,8 +9,8 @@ import argparse
 import time
 import gzip
 
-import barcodes
-import qc
+import  ngskit.barcodes as barcodes
+import  ngskit.qc as qc
 
 
 class Output_agent(object):
