@@ -8,7 +8,8 @@ requirements = [
             'scipy',
             'pytest',
             'scikit-learn',
-            'tqdm',]
+            'tqdm',
+            'python-Levenshtein']
 
 
 

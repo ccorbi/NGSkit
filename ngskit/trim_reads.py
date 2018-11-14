@@ -275,7 +275,7 @@ def workflow(opts):
     return
 
 
-if __name__ == '__main__':
+def main():
     # Read argtments
     opts = get_options()
 
@@ -294,3 +294,8 @@ if __name__ == '__main__':
     # DONE
     time_stamp = time.ctime()
     logger.info('JOB ENDS {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+
+
+
+if __name__ == '__main__':
+    main()
