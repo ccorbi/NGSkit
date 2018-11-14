@@ -11,8 +11,8 @@ import gzip
 
 import  ngskit.barcodes as barcodes
 import  ngskit.qc as qc
-#import qc
-#import barcodes
+import qc
+import barcodes
 
 class Output_agent(object):
     """Managment of the output demultiplexation

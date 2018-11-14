@@ -376,3 +376,41 @@ def _get_codons_from(codons_dict):
         all_codons.extend(codons_list)
 
     return all_codons
+
+
+
+def complement(seq):
+    """return complement sequence
+
+    Parameters
+    ----------
+    seq : array_like, or str
+
+    Returns
+    -------
+    str
+
+
+    """
+
+    complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'} 
+
+    bases = [complement[base] for base in seq] 
+    return ''.join(bases)
+
+
+def reverse_complement(s):
+    """return reverse and complement sequence
+
+    Parameters
+    ----------
+    seq : array_like or str
+
+    Returns
+    -------
+    str
+
+
+    """
+
+    return complement(s[::-1])
