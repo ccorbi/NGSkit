@@ -10,8 +10,12 @@ import time
 import ngskit.barcodes as barcodes
 from ngskit.utils import fasta_tools, fastq_tools
 
+#import barcodes
+#from utils import fasta_tools, fastq_tools
+
 def create_folder(output_folder):
     # Create output folder
+    logger = logging.getLogger(__name__)
     logger.info('Open folder %s', output_folder)
     try:
         # by default Sequences
@@ -60,6 +64,7 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
 
     """
     # Init the output format, retunr a function
+    logger = logging.getLogger(__name__)
     create_folder(output_folder)
     #
     if output_fmt == 'fasta':
@@ -120,6 +125,7 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
 
 def get_length_label(demultiplexed_fastq_file):
 
+    logger = logging.getLogger(__name__)
     filename, _ = os.path.splitext(demultiplexed_fastq_file)
     seq_lenght = filename.split('_')[-2:-1]
     logger.info("Label lenght: %s", seq_lenght[0])
@@ -185,7 +191,7 @@ def get_options():
 
     return options
 
-def workflow(opts):
+def main():
     """Pipeline Control.
 
     Parameters
@@ -194,6 +200,19 @@ def workflow(opts):
 
 
     """
+    opts = get_options()
+
+    # init logging
+    time_stamp = time.ctime()
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename= 'Trimming_'+opts.input_folder+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filemode='w')
+    logger = logging.getLogger(__name__)
+
+    logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+    # DEMULTIPLEX
     # Check inputs
     # Load Barcodes info
     # check barcodes integrity, peplength, fastq
@@ -272,28 +291,31 @@ def workflow(opts):
             else:
                 #  unknow method
                 pass
-    return
+    
 
-
-def main():
-    # Read argtments
-    opts = get_options()
-
-    # init logging
-    time_stamp = time.ctime()
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        datefmt='%m-%d %H:%M',
-                        filename= 'Trimming_'+opts.input_folder+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
-                        filemode='w')
-    logger = logging.getLogger(__name__)
-
-    logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
-    # DEMULTIPLEX
-    workflow(opts)
     # DONE
     time_stamp = time.ctime()
     logger.info('JOB ENDS {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+    return
+# def main():
+#     # Read argtments
+#     opts = get_options()
+
+#     # init logging
+#     time_stamp = time.ctime()
+#     logging.basicConfig(level=logging.INFO,
+#                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#                         datefmt='%m-%d %H:%M',
+#                         filename= 'Trimming_'+opts.input_folder+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+#                         filemode='w')
+#     logger = logging.getLogger(__name__)
+
+#     logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
+#     # DEMULTIPLEX
+#     workflow(opts)
+#     # DONE
+#     time_stamp = time.ctime()
+#     logger.info('JOB ENDS {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
 
 
 

@@ -20,8 +20,10 @@ def read_fastq(demultiplexed_fastq, qthreshold=0):
             # Read seq and Quality info
             read1_seq, read1_strand, read1_qual = [next(read1) for _ in range(3)]
             #Translate the Quality to a list of Integers
-
-            qual = [ord(c)-33 for c in read1_qual.strip().decode()]
+            try:
+                qual = [ord(c)-33 for c in read1_qual.strip().decode()]
+            except AttributeError:
+                qual = [ord(c)-33 for c in read1_qual.strip()]
 
             # Control
             try:
@@ -32,8 +34,10 @@ def read_fastq(demultiplexed_fastq, qthreshold=0):
                 raise ValueError
 
             if len(read1_seq.strip()) == len(qual) and avg_quality >= qthreshold:
-
-                seqs.append((read1_seq.strip().decode(), avg_quality, qual))
+                try:
+                    seqs.append((read1_seq.strip().decode(), avg_quality, qual))
+                except AttributeError:
+                    seqs.append((read1_seq.strip(), avg_quality, qual))
             else:
                 # Stats
                 pass

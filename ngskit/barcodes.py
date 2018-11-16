@@ -4,7 +4,8 @@ import logging
 import string
 
 logger = logging.getLogger(__name__)
-
+from ngskit.utils import dna
+#from utils import dna
 
 class Barcode(object):
     """docstring for Barcode Class
@@ -81,7 +82,16 @@ class Barcode(object):
                     print('WARNING CHECK: {} {}'.format( element, seq))
 
 
-        
+    def reverse_comple(self, item):
+
+        if item == 'b2':
+            self.b2_seq = dna.reverse_complement(self.b2_seq)
+            return
+        if item == 'c2':
+            self.c2_seq = dna.reverse_complement(self.c2_seq)
+            return
+
+
 
 
 
@@ -171,6 +181,7 @@ def find_min(seq_bag):
                 dist=hamdist(seq_bag[i][:-1], seq_bag[j][:-1])
                 if dist < dmin:
                         dmin = dist
+    return dmin
 
 def recomend_mininal(barcodes, token):
     seq_bag =list()
@@ -206,9 +217,22 @@ if __name__ == '__main__':
                         default='demultiplex', help='Output prefix name \
                         to_demultiplex by default')
 
+    parser.add_argument( '--rc_b2', action="store_true", dest="rc_b2",
+                        default=False, help='Reverse and Complemete barcode 2')
+
+    parser.add_argument( '--rc_c2', action="store_true", dest="rc_c2",
+                        default=False, help='Reverse and Complemete Constant region 2')
+
     options = parser.parse_args()
 
     excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int})
+
+    if options.rc_b2:
+        excel_barcode[4] = excel_barcode[4].apply(dna.reverse_complement)
+
+    if options.rc_c2:
+        excel_barcode[3] = excel_barcode[3].apply(dna.reverse_complement)
+
     # Output format
     if options.out_prefix:
         template_file_name = options.out_prefix
