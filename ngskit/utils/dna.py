@@ -350,6 +350,7 @@ def possible_encondings(seq, codons_base=A2C_NNS_DICT):
        The number of different Nucleotide sequence that may encode the input seq
 
     """
+    #assert len(seq) != 0
 
     n = list()
 

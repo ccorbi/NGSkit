@@ -223,15 +223,32 @@ if __name__ == '__main__':
     parser.add_argument( '--rc_c2', action="store_true", dest="rc_c2",
                         default=False, help='Reverse and Complemete Constant region 2')
 
+    parser.add_argument('--skip_header', action="store_true", dest="skip_header",
+                        default=False, help='Input file has a header, skip it')
+
     options = parser.parse_args()
 
-    excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int})
+    if options.skip_header:
+
+        excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int}, skip_blank_lines=True, skiprows=1)
+    else:
+        excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int}, skip_blank_lines=True)
+
 
     if options.rc_b2:
         excel_barcode[4] = excel_barcode[4].apply(dna.reverse_complement)
 
     if options.rc_c2:
         excel_barcode[3] = excel_barcode[3].apply(dna.reverse_complement)
+
+    try:
+        excel_barcode[6] = excel_barcode[1].str.len() +\
+                           excel_barcode[2].str.len() + \
+                           excel_barcode[3].str.len() + \
+                           excel_barcode[4].str.len() + excel_barcode[5]
+    except Exception as e:
+        print(e)
+        pass
 
     # Output format
     if options.out_prefix:
