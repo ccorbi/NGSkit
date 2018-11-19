@@ -482,9 +482,9 @@ def b2h_random_entropy(fasta_file, norm=True):
             N = dna.possible_encondings(aa)
             if N == 1:
                 # Seq, Reads, Entropy
-                parsed_aa.append([aa, df_grp['Reads'].sum(), 1])
+                parsed_aa.append([aa, df_grp['Reads'].sum(),df_grp.shape[0], 1])
             else:
-                parsed_aa.append([aa, df_grp['Reads'].sum(), 0])
+                parsed_aa.append([aa, df_grp['Reads'].sum(),df_grp.shape[0],  0])
         else:
             N = dna.possible_encondings(aa)
             df_grp['prob'] = df_grp['Reads'] / df_grp['Reads'].sum(skipna=True)
@@ -495,3 +495,5 @@ def b2h_random_entropy(fasta_file, norm=True):
             # Seq, Reads, Entropy
             parsed_aa.append([aa, df_grp['Reads'].sum(),df_grp.shape[0], shannon_entropy])
     return pd.DataFrame(parsed_aa, columns=['Seq', 'Reads','Var' ,'E'])
+
+

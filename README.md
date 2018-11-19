@@ -4,7 +4,8 @@
 
 # NGSKit
 
-Collection basic tools to preprocess NGS data for the lab Pipelines.
+Collection of basic tools to preprocess NGS data. These tools are heavily custom to adapt to our pipelines, see literature above to read about some application cases. 
+
 
 ## Installing
 
@@ -14,10 +15,10 @@ pip install .
 
 ## demultiplex
 
-Demultiplexation Fastq sequences tool Usage Demultiplexation:
+Demultiplexation Fastq sequences tool:
 
 ```bash
-demultiplex_reads.py  -b [BarCode_file.inp] -i [deep_seq_file.fastq] -o [folder_name] -l 54 -m QUICK --misreads_cutoff_cons 2
+demultiplexer  -b [BarCode_file.inp] -i [deep_seq_file.fastq] -o [folder_name] -l 54 -m QUICK --misreads_cutoff_cons 2
 
 
 optional arguments:
@@ -51,7 +52,7 @@ optional arguments:
 Trimming Fastq sequences tool Usage Trimming:
 
 ```bash
-trim_reads.py  -d [demultiplexedFolder]-b [BarCode_file.inp] -q [Quality threshold] -m [method] --output_fmt fasta
+trimmer  -d [demultiplexedFolder]-b [BarCode_file.inp] -q [Quality threshold] -m [method] --output_fmt fasta
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -77,3 +78,7 @@ optional arguments:
 ```
 
 ## oligo library generator
+
+# Literature
+
+
