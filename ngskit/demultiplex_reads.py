@@ -521,7 +521,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
         time_stamp = time.ctime()
         fastq_file_name = os.path.basename(inputfile)
         time_out = '{4}_{1}_{2}_{0}_{3}'.format(*time_stamp.split())
-        fstats_name =  'Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] + time_out
+        fstats_name =  out_dir + '/Stats/Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] + time_out
         gbl_stats.save(fstats_name)
 
     return
@@ -677,13 +677,15 @@ def main():
 
     # Read argtments
     opts = get_options()
+    folders_list =  ['Stats', 'Logs']
+    makeoutputdirs(folders_list, opts.out_dir)
 
     # init logging
     time_stamp = time.ctime()
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename= 'Dmultplx_'+opts.out_dir+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename= opts.out_dir + '/Logs/' +'Dmultplx_'+opts.out_dir+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
                         filemode='w')
 
     logger = logging.getLogger(__name__)
@@ -707,6 +709,7 @@ def main():
     # check barcodes integrity, peplength, fastq
     barcodes_list = barcodes.read(opts.barcode_file)
     # make output folder
+    folders_list = barcodes_list + ['Stats', 'Logs']
     makeoutputdirs(barcodes_list, opts.out_dir)
 
     # Init Logging
