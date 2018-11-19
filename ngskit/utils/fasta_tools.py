@@ -1,5 +1,7 @@
 """Fasta Tools
 """
+import pandas as pd
+
 def write_fasta_sequence(sequence_data, file_output, write_mode='a'):
     """Add sequences to a file, in Fasta Format.
 
@@ -121,6 +123,7 @@ def read_to(filename, to='dict', proc_header=None):
         return list(default.values())
     
     elif to == 'pandas':
-        data = zip(default_info.keys(),default_info.values())
+        data = zip(default.keys(),default.values())
+        data = list(data)
         return pd.DataFrame(data, columns = ['ID','Seq'])
         
