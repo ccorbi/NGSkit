@@ -4,7 +4,7 @@
 
 # NGSKit
 
-Collection of basic tools to preprocess NGS data. These tools are heavily custom to adapt to our pipelines, see literature above to read about some application cases. 
+Collection of basic tools to preprocess NGS data. These tools are heavily custom to adapt to our pipelines, see literature above to read about some application cases of this package. 
 
 
 ## Installing
@@ -13,7 +13,22 @@ Collection of basic tools to preprocess NGS data. These tools are heavily custom
 pip install .
 ```
 
-## demultiplex
+## Requirements
+
+  pandas
+  numpy
+  biopython
+  scipy
+  pytest
+  scikit-learn
+  tqdm
+  python-Levenshtein
+  weblogo
+  matplotlib
+
+
+
+# demultiplex
 
 Demultiplexation Fastq sequences tool:
 
@@ -47,7 +62,7 @@ optional arguments:
                         Do not Save match frequencies
 ```
 
-## trimming
+# trimming
 
 Trimming Fastq sequences tool Usage Trimming:
 
@@ -77,8 +92,17 @@ optional arguments:
 
 ```
 
-## oligo library generator
+# Barcodes
+
+# Library generator
 
 # Literature
 
 
+A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase. Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
+Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3.
+
+
+# Acknowledgement
+
+This code have been inspirated by the early script wrote by Juhyun Jeon. I incorporate also a lot of value  feedback from Satra Nim and Alexey Strokach. Everything under the surpervision of Prof. Philip M Kim. 

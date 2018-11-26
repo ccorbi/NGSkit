@@ -109,8 +109,8 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
 
                 ntrimed += 1
                 # save output format
-                # attach Qavg to the id
-                seq_id = '{}_{}'.format(read1_id.strip(), avg_quality)
+                # attach Qavgm and length origin to the id
+                seq_id = '{}_Q:{:.2f}_F:{}'.format(read1_id.strip(), avg_quality, trgt_len)
                 save_seq([seq_id, target_sequence, target_qual],
                          file_output=filehdl_output)
                 # save
@@ -207,7 +207,7 @@ def main():
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename= 'Trimming_'+opts.input_folder+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename= 'Trimming_'+opts.input_folder.replace('/','')+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
                         filemode='w')
     logger = logging.getLogger(__name__)
 
