@@ -15,16 +15,16 @@ pip install .
 
 ## Requirements
 
-  pandas
-  numpy
-  biopython
-  scipy
-  pytest
-  scikit-learn
-  tqdm
-  python-Levenshtein
-  weblogo
-  matplotlib
+  - pandas
+  - numpy
+  - biopython
+  - scipy
+  - pytest
+  - scikit-learn
+  - tqdm
+  - python-Levenshtein
+  - weblogo
+  - matplotlib
 
 
 
