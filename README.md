@@ -4,7 +4,7 @@
 
 # NGSKit
 
-Collection of basic tools to preprocess NGS data. These tools are heavily custom to adapt to our pipelines, see literature above to read about some application cases of this package. 
+Collection of tools for preprocess NGS data. This tools are heavily custom to Kimlab's common screenings, please take a look to the literature above to read about some application cases of this package. 
 
 
 ## Installing
@@ -27,8 +27,14 @@ pip install .
   - matplotlib
 
 
+## Optionals
 
-# demultiplex
+  - Pandaseq
+  - Fastqc
+
+
+
+# Demultiplexation
 
 Demultiplexation Fastq sequences tool:
 
@@ -99,8 +105,11 @@ optional arguments:
 # Literature
 
 
-A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase. Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
+"A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase". Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
 Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3.
+
+"A multi-reporter bacterial 2-hybrid assay for the fast, simple, and dynamic assay of PDZ domain – peptide interactions".
+Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus
 
 
 # Acknowledgement

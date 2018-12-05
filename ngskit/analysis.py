@@ -199,7 +199,7 @@ def dist_PWM(pwm1, pwm2):
 
 
 
-def entropy(sequences):
+def entropy_bypos(sequences):
     """return a array with entropy for each postion.
 
     Parameters
