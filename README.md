@@ -4,8 +4,9 @@
 
 # NGSKit
 
-Collection of tools for preprocess NGS data. This tools are heavily custom to Kimlab's common screenings, please take a look to the literature above to read about some application cases of this package. 
+Collection of tools for preprocessing NGS data. These tools are heavily custom to Kimlab's screenings, please take a look at the references section (above) to read in more detail about some application cases of this package. 
 
+The package can be divided into 3 different sets of tools; NGS handling data (FASTQ from Illumina); secondly tools and pipelines for analysis of the screening, and finally the library encoding tools. 
 
 ## Installing
 
@@ -34,7 +35,7 @@ pip install .
 
 
 
-# Demultiplexation
+# NGS Treatment: Demultiplexation
 
 Demultiplexation Fastq sequences tool:
 
@@ -68,7 +69,7 @@ optional arguments:
                         Do not Save match frequencies
 ```
 
-# trimming
+# NGS Treatment: Trimming
 
 Trimming Fastq sequences tool Usage Trimming:
 
@@ -98,20 +99,22 @@ optional arguments:
 
 ```
 
-# Barcodes
+## NGS Treatment: Barcodes
 
-# Library generator
+## Analysis
 
-# Literature
+## Library generator
+
+# References
 
 
 "A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase". Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
 Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3.
 
 "A multi-reporter bacterial 2-hybrid assay for the fast, simple, and dynamic assay of PDZ domain – peptide interactions".
-Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus
+Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus. ACS Synth Biol. 2019 Apr 18. doi: 10.1021/acssynbio.8b00499.
 
 
 # Acknowledgement
 
-This code have been inspirated by the early script wrote by Juhyun Jeon. I incorporate also a lot of value  feedback from Satra Nim and Alexey Strokach. Everything under the surpervision of Prof. Philip M Kim. 
+This code have been inspired by the combination of script wrote by Juhyun Jeon. I incorporate also a lot of valuable feedback from Satra Nim and Alexey Strokach. Everything under the supervision of Prof. Philip M Kim. 
