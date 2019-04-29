@@ -999,7 +999,7 @@ ttHydrophobicity = {'D':  -3.27,
 
 
 #            generate_logo(df['Seq'], filename='./temp/3_iterative_{}_{:.5f}_{}'.format(n,q,df.shape[0]))
-def generate_logo(sequences, seq_len=80, filename='designs', title = None, fineprint='',xlabel=None, fformat='PNG' ):
+def generate_logo(sequences, seq_len=80, filename='designs', title = None, fineprint='',xlabel=None, fformat='PNG', color_map = 'chemistry' ):
     """quick logo generation.
 
     Parameters
@@ -1031,7 +1031,7 @@ def generate_logo(sequences, seq_len=80, filename='designs', title = None, finep
         print("{}".format(seq), file=ohandler)
     ohandler.close()
     
-    base_commd = 'weblogo -f {} -c chemistry -o {} -n {} -U bits --composition equiprobable '.format(filename + '.fasta',
+    base_commd = 'weblogo -f {} -c {} -o {} -n {} -U bits --composition equiprobable '.format(filename + '.fasta', color_map,
                                                                             filename + '.{}'.format(fformat),
                                                                             seq_len)
 
