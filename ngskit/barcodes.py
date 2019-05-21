@@ -2,7 +2,9 @@ from __future__ import print_function
 import os
 import logging
 import string
-
+import pandas as pd
+import sys
+import argparse
 logger = logging.getLogger(__name__)
 from ngskit.utils import dna
 #from utils import dna
@@ -193,13 +195,13 @@ def recomend_mininal(barcodes, token):
     return minim + 1
 
 
-if __name__ == '__main__':
+def main():
     # split barcodes files in individual files
     # allow to submit each sample as a single job
     # simple input
-    import pandas as pd
-    import sys
-    import argparse
+
+
+    logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser(description="""
     Barcodes tool
@@ -266,3 +268,5 @@ if __name__ == '__main__':
         except:
             print('Error in the barcodes Format')
     
+if __name__ == '__main__':
+    main()
