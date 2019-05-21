@@ -544,7 +544,7 @@ def dump(self, option):
     return
 
 
-def makeoutputdirs(barcode_list, output_dir):
+def makeoutputdirs(barcode_list, output_dir, is_barcode=True):
     """Helper function to create barcode output files if they not exist.
 
     Parameters
@@ -561,7 +561,12 @@ def makeoutputdirs(barcode_list, output_dir):
 
     for sample in barcode_list:
         # Make folders for each barcode
-        out_folder = os.path.join(output_dir, sample.id).replace('\\', '/')
+        if is_barcode:
+            folder_name = sample.id 
+        else:
+            folder_name = sample
+
+        out_folder = os.path.join(output_dir, folder_name).replace('\\', '/')
         try:
             os.makedirs(out_folder)
         except OSError:
@@ -571,6 +576,9 @@ def makeoutputdirs(barcode_list, output_dir):
             logger.info('Folder {} already exist'.format(out_folder))
 
     return
+
+
+
 
 ##############################################################
 ##############################################################
@@ -678,7 +686,7 @@ def main():
     # Read argtments
     opts = get_options()
     folders_list =  ['Stats', 'Logs']
-    makeoutputdirs(folders_list, opts.out_dir)
+    makeoutputdirs(folders_list, opts.out_dir, is_barcode=False)
 
     # init logging
     time_stamp = time.ctime()
