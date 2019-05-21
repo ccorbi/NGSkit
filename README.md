@@ -11,7 +11,7 @@ The package can be divided into 3 different sets of tools; NGS handling data (FA
 ## Installing
 
 ```bash
-pip install .
+pip install -r requirements.txt   . 
 ```
 
 ## Requirements
