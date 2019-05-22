@@ -9,7 +9,8 @@ requirements = [
             'pytest',
             'scikit-learn',
             'tqdm',
-            'python-Levenshtein']
+            'python-Levenshtein',
+            'matplotlib']
 
 
 

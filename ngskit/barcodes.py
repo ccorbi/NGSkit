@@ -230,6 +230,7 @@ def main():
 
     options = parser.parse_args()
 
+    # TODO: test types and content and react auto.    
     if options.skip_header:
 
         excel_barcode = pd.read_excel(options.barcode_file, header=None, dtype={5:int}, skip_blank_lines=True, skiprows=1)
