@@ -1,5 +1,6 @@
 
 from __future__ import print_function
+from __future__ import unicode_literals
 import os
 import sys
 import pandas as pd
@@ -74,10 +75,14 @@ class Output_agent(object):
             self.add_output(barcode, read)
 
         # save seq in fastq format
-        self.output_handlers[fileid].write(read1_id)
-        self.output_handlers[fileid].write(read1_seq)
-        self.output_handlers[fileid].write("+\n")
-        self.output_handlers[fileid].write(read1_qual)
+        for  _data in [read1_id, read1_seq,"+\n" ,read1_qual]:
+            if type(_data) == bytes:
+                _data = _data.decode("utf-8")
+
+            self.output_handlers[fileid].write(_data)
+#        self.output_handlers[fileid].write(read1_seq)
+#        self.output_handlers[fileid].write("+\n")
+#        self.output_handlers[fileid].write(read1_qual)
 
 
     def close(self):
@@ -109,6 +114,8 @@ def match(seq, target, cutoff):
 
     '''
     cutoff = int(cutoff)
+    if type(seq) == bytes:
+       seq = seq.decode("utf-8")
     distance = Leven.distance(seq, target)
 
     if distance > cutoff:
