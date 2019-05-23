@@ -75,18 +75,21 @@ def return_cov(df, lib_size=6000):
     return df['subjectId'].unique().shape[0] / float(lib_size)
 
 
-def from_bowtie_generate_ranking_file(df, outputname, **kargs):
+def from_bowtie_generate_ranking_file(df, outputname):
 
     # Count Reads
     count = df.groupby(['subjectId'], as_index=False)['off'].agg(len)
     count.rename(columns={'off': 'Counts'}, inplace=True)
     # Count variants
-    var = df.groupby(['subjectId' ], as_index=False)['off'].agg(len)
-    var.rename(columns={'off': 'Var'}, inplace=True)
+
     # get the original seq and discard variants, I do not like it a lot
+    # this can be problematic, this func need some refactoring
     pureseq = df[(df['off']==0) & (df['mismatchDescriptor'].isnull() )]
     pureseq = pureseq.drop_duplicates(subset=['subjectId'])
     pureseq = pureseq[['subjectId','seq']]
+    # Count variants
+    var = pureseq.groupby(['subjectId' ], as_index=False)['seq'].agg(len)
+    var.rename(columns={'seq': 'Var'}, inplace=True)
     # Merge
     final_data = pd.merge(pureseq, var, on= 'subjectId')
     final_data = pd.merge(final_data, count, on= 'subjectId')
@@ -180,7 +183,7 @@ if __name__ == '__main__':
             g = from_bowtie_generate_ranking_file(data, opts.output)
             s = g['Counts'].describe()
 
-            print('INPUT\tRaw Mapped READS\tFiltered Mapped READS\tUnique Reads\tlibrary Coverage\tmean\tstd\tmin\t25%\t50%\t75%\tmax'
+            print('Sample\tRaw Mapped READS\tFiltered Mapped READS\tUnique Reads\tlibrary Coverage\tmean\tstd\tmin\t25%\t50%\t75%\tmax'
                   )
             print('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(
                 opts.input_file,
