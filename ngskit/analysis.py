@@ -999,7 +999,7 @@ ttHydrophobicity = {'D':  -3.27,
 
 
 #            generate_logo(df['Seq'], filename='./temp/3_iterative_{}_{:.5f}_{}'.format(n,q,df.shape[0]))
-def generate_logo(sequences, seq_len=80, filename='designs', title = None, fineprint='',xlabel=None, fformat='PNG', color_map = 'chemistry' ):
+def generate_logo(sequences, seq_len=80, filename='designs', **kwargs  ):
     """quick logo generation.
 
     Parameters
@@ -1015,27 +1015,30 @@ def generate_logo(sequences, seq_len=80, filename='designs', title = None, finep
     -------
 
     """
-    # if pass , Folder name
-    
-    #--fineprint
-    #--title
     #--label
-    extras = {'fineprint':fineprint,
-             'title': title, 
-             'annotate':xlabel,
-             'format':fformat}
-
+    # annotate = xlabel
+    #format == fformat
+    #                 'title': '', 
+    #             'annotate':'',
+    # my defaults
+    options = {'fineprint':'',
+             'format':'PNG',
+             'composition':'None' ,
+             'units':'bits',
+             'color-scheme':'chemistry',
+             'stacks-per-line':300 }
+    options.update(kwargs)
+    
     ohandler = open(filename + '.fasta', 'w')
     for seq in sequences:
         print(">{}".format(seq), file=ohandler)
         print("{}".format(seq), file=ohandler)
     ohandler.close()
     
-    base_commd = 'weblogo -f {} -c {} -o {} -n {} -U bits --composition equiprobable '.format(filename + '.fasta', color_map,
-                                                                            filename + '.{}'.format(fformat),
-                                                                            seq_len)
-
-    for label, data in extras.items():
+    base_commd = 'weblogo -f {} -o {}'.format(filename + '.fasta',
+                                                     filename + '.{}'.format(fformat))
+    # apply kwargs here
+    for label, data in options.items():
         if data:
             base_commd = base_commd + f'--{label} {data} '
 

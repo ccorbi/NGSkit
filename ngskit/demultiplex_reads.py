@@ -116,7 +116,8 @@ def match(seq, target, cutoff):
     cutoff = int(cutoff)
     if type(seq) == bytes:
        seq = seq.decode("utf-8")
-    distance = Leven.distance(seq, target)
+       
+    distance = count_mismatches(seq, target)
 
     if distance > cutoff:
 
@@ -512,6 +513,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                 read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
                 if read_match_info['map']:
+                    #TODO add some cache to reduce i/o
                     output.save_seq(read1_id, read1_seq, read1_qual,
                              barcode, read_match_info)
                 if dump:
@@ -522,7 +524,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                     pass
     # close
     output.close()
-
+    #move this out of here
     if save_frequencies:
         # write file
         time_stamp = time.ctime()
