@@ -35,10 +35,16 @@ class Output_agent(object):
 
 
     """
+
+
     def __init__(self, barcodes_list, out_dir):
 
         self.output_handlers = dict()
         self.out_dir = out_dir
+
+        self.cache_limit = 10000
+        self.cache = list()
+
         # open barcode file handlers for barcode
         # improve I/O
         for barcode in barcodes_list:
@@ -84,8 +90,29 @@ class Output_agent(object):
 #        self.output_handlers[fileid].write("+\n")
 #        self.output_handlers[fileid].write(read1_qual)
 
+        return
+
+    def add_seq(self, read1_id, read1_seq, read1_qual, barcode, read_match_info):
+        if len(self.cache) < self.cache_limit:
+                    #output.save_seq(read1_id, read1_seq, read1_qual,
+                         #barcode, read_match_info)
+            self.cache.append([read1_id, read1_seq, read1_qual, barcode, read_match_info])
+        else:
+            self.write_seqs()
+
+    def write_seqs(self):
+
+        for data, barcode, read_match_info in self.cache:
+            self.save_seq(data[0], data[1], data[2], barcode, read_match_info)
+
+        self.cache = list()
+        return
+
 
     def close(self):
+        if len(self.cache) != 0:
+            self.write_seqs()
+
         for file_handler in self.output_handlers.values():
             file_handler.close()
 
@@ -116,7 +143,7 @@ def match(seq, target, cutoff):
     cutoff = int(cutoff)
     if type(seq) == bytes:
        seq = seq.decode("utf-8")
-       
+
     distance = count_mismatches(seq, target)
 
     if distance > cutoff:
@@ -450,6 +477,7 @@ def identification_method(method='standard'):
         raise ValueError('Method {} do not exist'.format(method))
 
 
+
 def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                dpx_method='standard', **Kargs):
     """.
@@ -476,6 +504,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     identification_method
 
     """
+
     # Select  method
     identify_seq = identification_method(dpx_method)
     # Control variables
@@ -498,7 +527,8 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
         o = open
 
     # Open Forward FastaQ file
-    with o(inputfile, 'r') as read1:
+    # eventually I should drop py27 support. 
+    with o(inputfile, 'rt', encoding='utf-8') as read1:
 
         for read1_id in read1:
             # Read 4 by 4
@@ -513,9 +543,10 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                 read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
                 if read_match_info['map']:
-                    #TODO add some cache to reduce i/o
+                    #TODO add some cache to reduce i/o                    
                     output.save_seq(read1_id, read1_seq, read1_qual,
-                             barcode, read_match_info)
+                                barcode, read_match_info)
+
                 if dump:
                     pass
                 if save_frequencies:
