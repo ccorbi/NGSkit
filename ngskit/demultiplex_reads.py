@@ -175,6 +175,8 @@ def count_mismatches(seq, target):
     return distance
 
 
+
+# TO DO, transfor this to a class
 def identification_method(method='standard'):
     """Sequence identification method.
 
@@ -601,7 +603,7 @@ def makeoutputdirs(barcode_list, output_dir, is_barcode=True):
 
     for sample in barcode_list:
         # Make folders for each barcode
-        if is_barcode:
+        if type(sample)!= str:
             folder_name = sample.id 
         else:
             folder_name = sample
@@ -714,7 +716,7 @@ def get_options():
 
 
 def main():
-    """Pipeline Control.
+    """Main Pipeline.
 
     Parameters
     ----------
@@ -725,8 +727,7 @@ def main():
 
     # Read argtments
     opts = get_options()
-    folders_list =  ['Stats', 'Logs']
-    makeoutputdirs(folders_list, opts.out_dir, is_barcode=False)
+
 
     # init logging
     time_stamp = time.ctime()
@@ -740,7 +741,8 @@ def main():
 
     logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
 
-
+    # wrapp in a function call cheching
+    # todo move this to a function
     # Check inputs
     # FASTAQ
     fastqs = opts.input_fastqs
@@ -753,9 +755,13 @@ def main():
     unique = set(fastqs)
     if len(unique) != len(fastqs):
         raise ValueError('duplicate input files')
+    
+    # move this to barcodes
     # Load Barcodes info
     # check barcodes integrity, peplength, fastq
     barcodes_list = barcodes.read(opts.barcode_file)
+    [bc.sanity_check() for bc in barcodes_list]
+
     # make output folder
     folders_list = barcodes_list + ['Stats', 'Logs']
     makeoutputdirs(barcodes_list, opts.out_dir)
