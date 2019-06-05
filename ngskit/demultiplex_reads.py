@@ -11,7 +11,7 @@ import  ngskit.barcodes as barcodes
 import  ngskit.qc as qc
 
 
-class Output_agent(object):
+class Output_manager(object):
     """Managment of the output demultiplexation
 
         Parameters
@@ -37,9 +37,6 @@ class Output_agent(object):
 
         self.output_handlers = dict()
         self.out_dir = out_dir
-
-        self.cache_limit = 100000
-        self.cache = list()
 
         # open barcode file handlers for barcode
         # improve I/O
@@ -86,26 +83,8 @@ class Output_agent(object):
 
         return
 
-    def add_seq(self, read1_id, read1_seq, read1_qual, barcode, read_match_info):
-        if len(self.cache) < self.cache_limit:
-                    #output.save_seq(read1_id, read1_seq, read1_qual,
-                         #barcode, read_match_info)
-            self.cache.append([read1_id, read1_seq, read1_qual, barcode, read_match_info])
-        else:
-            self.write_seqs()
-
-    def write_seqs(self):
-
-        for read1_id, read1_seq, read1_qual, barcode, read_match_info in self.cache:
-            self.save_seq(read1_id, read1_seq, read1_qual, barcode, read_match_info)
-
-        self.cache = list()
-        return
-
-
     def close(self):
-        if len(self.cache) != 0:
-            self.write_seqs()
+
 
         for file_handler in self.output_handlers.values():
             file_handler.close()
@@ -513,7 +492,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     dump = Kargs.get('dump', False)
 
     # open barcode file handlers
-    output = Output_agent(barcodes_list, out_dir)
+    output = Output_manager(barcodes_list, out_dir)
 
     # Q&D hack, need some elegan solucion for this in the future
     #this can easy fail
@@ -540,7 +519,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
 
                 if read_match_info['map']:
                                         
-                    output.add_seq(read1_id, read1_seq, read1_qual,
+                    output.save_seq(read1_id, read1_seq, read1_qual,
                                 barcode, read_match_info)
 
                 if dump:
