@@ -1,6 +1,3 @@
-
-from __future__ import print_function
-from __future__ import unicode_literals
 import os
 import sys
 import pandas as pd
@@ -12,8 +9,7 @@ import gzip
 
 import  ngskit.barcodes as barcodes
 import  ngskit.qc as qc
-#import qc
-#import barcodes
+
 
 class Output_agent(object):
     """Managment of the output demultiplexation
@@ -42,7 +38,7 @@ class Output_agent(object):
         self.output_handlers = dict()
         self.out_dir = out_dir
 
-        self.cache_limit = 10000
+        self.cache_limit = 100000
         self.cache = list()
 
         # open barcode file handlers for barcode
@@ -86,9 +82,7 @@ class Output_agent(object):
                 _data = _data.decode("utf-8")
 
             self.output_handlers[fileid].write(_data)
-#        self.output_handlers[fileid].write(read1_seq)
-#        self.output_handlers[fileid].write("+\n")
-#        self.output_handlers[fileid].write(read1_qual)
+
 
         return
 
@@ -102,8 +96,8 @@ class Output_agent(object):
 
     def write_seqs(self):
 
-        for data, barcode, read_match_info in self.cache:
-            self.save_seq(data[0], data[1], data[2], barcode, read_match_info)
+        for read1_id, read1_seq, read1_qual, barcode, read_match_info in self.cache:
+            self.save_seq(read1_id, read1_seq, read1_qual, barcode, read_match_info)
 
         self.cache = list()
         return
@@ -545,8 +539,8 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
                 read_match_info = identify_seq(read1_seq, barcode, **Kargs)
 
                 if read_match_info['map']:
-                    #TODO add some cache to reduce i/o                    
-                    output.save_seq(read1_id, read1_seq, read1_qual,
+                                        
+                    output.add_seq(read1_id, read1_seq, read1_qual,
                                 barcode, read_match_info)
 
                 if dump:
@@ -586,7 +580,7 @@ def dump(self, option):
     return
 
 
-def makeoutputdirs(barcode_list, output_dir, is_barcode=True):
+def makeoutputdirs(barcode_list, output_dir):
     """Helper function to create barcode output files if they not exist.
 
     Parameters
@@ -619,14 +613,63 @@ def makeoutputdirs(barcode_list, output_dir, is_barcode=True):
 
     return
 
+def check_fastq_exist(opts):
+    """check all fastq Files exist.
+
+    Parameters
+    ----------
+        options
+    Returns
+    -------
+
+    """
+
+    fastqs = opts.input_fastqs
+    for fastq in fastqs:
+        try:
+            os.path.isfile(fastq)
+        except:
+            raise ValueError('FastQ input {} do not exist'.format(fastq))
+
+    return
 
 
+def check_fastq_unique(opts):
+    # Files are unique
+    
+    fastqs = opts.input_fastqs
+    unique = set(fastqs)
+    if len(unique) != len(fastqs):
+        raise ValueError('duplicate input files')
+
+    return
+
+def checking_inputs(opts):
+    """wrapper of control of input files
+
+    Parameters
+    ----------
+        options
+
+    Returns
+    -------
+        error if a file do not complain
+
+    """
+
+    check_fastq_exist(opts)
+    check_fastq_unique(opts)
+    
+    # move this to barcodes
+    # Load Barcodes info
+    # check barcodes integrity, peplength, fastq
+    barcodes_list = barcodes.read(opts.barcode_file)
+    [bc.sanity_check() for bc in barcodes_list]
+
 
 ##############################################################
 ##############################################################
-##############################################################
-##############################################################
-#####################
+
 
 
 def get_options():
@@ -648,21 +691,6 @@ def get_options():
 
     """)
 
-    # parser.add_argument('-a', '--action',
-    #                     type='choice',
-    #                     action='store',
-    #                     dest='action',
-    #                     choices=['singleEND', 'pairEND'],
-    #                     default=False,
-    #                     help='to develop')
-
-    # Change this name, get thisn info from the barcodes
-    # Depricated, information added in the barcodes file,
-    # allow multiple lenghts
-    # parser.add_argument('-l', '--target_len', action="store",
-    #                     dest="target_len",
-    #                     default=False, help='Lengh of the designed oligo',
-    #                     required=True)
 
     parser.add_argument('-i', '--input_fastqs', nargs='+',
                         dest="input_fastqs", default=False, help='input_fastqs \
@@ -725,9 +753,8 @@ def main():
 
     """
 
-    # Read argtments
+    # Read arguments
     opts = get_options()
-
 
     # init logging
     time_stamp = time.ctime()
@@ -741,28 +768,16 @@ def main():
 
     logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
 
-    # wrapp in a function call cheching
-    # todo move this to a function
-    # Check inputs
-    # FASTAQ
-    fastqs = opts.input_fastqs
-    for fastq in fastqs:
-        try:
-            os.path.isfile(fastq)
-        except:
-            raise ValueError('FastQ input {} do not exist'.format(fastq))
+    # Check inputs consistency
+    checking_inputs(opts)
 
-    unique = set(fastqs)
-    if len(unique) != len(fastqs):
-        raise ValueError('duplicate input files')
-    
-    # move this to barcodes
-    # Load Barcodes info
-    # check barcodes integrity, peplength, fastq
+    # init barcodes
     barcodes_list = barcodes.read(opts.barcode_file)
-    [bc.sanity_check() for bc in barcodes_list]
+    # init fastq files
+    fastqs = opts.input_fastqs
 
     # make output folder
+    
     folders_list = barcodes_list + ['Stats', 'Logs']
     makeoutputdirs(barcodes_list, opts.out_dir)
 
@@ -778,7 +793,6 @@ def main():
     logger.info('Stats: {}'.format(opts.save_frequencies))
 
     # Call to the action
-    # To do,: Allow pair end reads.
     for fastq in fastqs:
         logger.info('working on: %s',fastq )
         single_end(fastq, barcodes_list, **opts.__dict__)
