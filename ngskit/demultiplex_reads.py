@@ -360,7 +360,7 @@ class Demultiplexation_method(object):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        futher_end : int
+        further_end : int
             How many up stream over the theorical end of the target position
             should I look for the second constant region
 
@@ -389,15 +389,15 @@ class Demultiplexation_method(object):
                 # add target distance to self.futher_end, how far up stream
                 # it will check
                 # (insertions)
-                self.futher_end += barcode.trgt_len
+                self.further_end += barcode.trgt_len
                 # Control dynamic length, speed up on assambled Reverse&Forward
                 # and diff population of sequences
-                if self.futher_end + barcode.b1_len + barcode.c1_len > len(read_seq):
+                if self.further_end + barcode.b1_len + barcode.c1_len > len(read_seq):
                     return read_map
                 # FLOATING WINDOW
                 # start searching from the very edge of the cons region 1 (empty vectors)
                 # and end  a bit further (insertions)
-                for var_target_len in range(self.futher_end):
+                for var_target_len in range(self.further_end):
 
                     # extract constant region 2, using float window
                     dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
