@@ -150,7 +150,7 @@ def count_mismatches(seq, target):
 
 
 # TO DO, transfor this to a class
-def identification_method(method='standard'):
+class Demultiplexation_method(object):
     """Sequence identification method.
 
     Parameters
@@ -174,9 +174,42 @@ def identification_method(method='standard'):
 
 
     """
-    logger = logging.getLogger(__name__)
+
+    def __init__(self, options):
+        """One liner description.
+
+            Parameters
+            ----------
+            misreads_cutoff_barcode :  int
+                number of mismatches allowed in the barcode regions (default 1)
+            misreads_cutoff_cons : int
+                number of mismatches allowed in the constant regions (default 1)
+            
+            Returns
+            -------
+
+        """
+        logger = logging.getLogger(__name__)
+        
+        self.cutoff_barcode = options.get('misreads_cutoff_barcode', 1)
+        self.cutoff_cons = options.get('misreads_cutoff_cons', 1)
+        self.further_end = options.get('further_end', 10)
+        self.stride = options.get('stride', 10)
+        
+
+ 
     
-    def quick(read_seq, barcode, **Kargs):
+    def _init_results(self, target_len):
+
+        return {'b1': '',
+                'c1': '',
+                'c2': '',
+                'b2': '',
+                'map': False,
+                'target_len': target_len}
+
+
+    def quick(self, read_seq, barcode):
         """Sequence selected if Barcode and constant region 1 are there.
 
         Parameters
@@ -185,10 +218,7 @@ def identification_method(method='standard'):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        misreads_cutoff_barcode :  int
-            number of mismatches allowed in the barcode regions (default 1)
-        misreads_cutoff_cons : int
-            number of mismatches allowed in the constant regions (default 1)
+
         Returns
         -------
         dict
@@ -196,38 +226,27 @@ def identification_method(method='standard'):
 
         """
         # init return dict
-        read_map = {'b1': '',
-                    'c1': '',
-                    'c2': '',
-                    'b2': '',
-                    'map': False,
-                    'target_len': barcode.trgt_len}
-        # get mismatch configuration
-        # try:
-        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
-        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
-        # except KeyError:
-        #     # logger.info('Misreads configuration missing using defaults')
-        # misreads_cutoff_barcode = Kargs.get('misreads_cutoff_barcode', 0)
-        # misreads_cutoff_cons = Kargs.get('misreads_cutoff_cons', 2)
+        read_map = self._init_results(barcode.trgt_len)
+
+
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
 
         # Check barcode 1
-        if match(b1, barcode.b1_seq, misreads_cutoff_barcode):
+        if match(b1, barcode.b1_seq, self.cutoff_barcode):
             read_map['b1'] = b1
             # Map  constant region 1, next to barcode 1
             cons1 = read_seq[barcode.b1_len:barcode.c1_len + barcode.b1_len]
             # Check constant region 1
-            if match(cons1, barcode.c1_seq, misreads_cutoff_cons):
+            if match(cons1, barcode.c1_seq, self.cutoff_cons):
                 # Success return
                 read_map['c1'] = cons1
                 read_map['map'] = True
 
         return read_map
 
-    def standard(read_seq, barcode, **Kargs):
+    def standard(self, read_seq, barcode):
         """Selected if  Both Forward and reverse Barcodes and constant regions
         are in the seq, without deletions or insertions.
 
@@ -237,10 +256,6 @@ def identification_method(method='standard'):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        misreads_cutoff_barcode :  int
-            number of mismatches allowed in the barcode regions (default 1)
-        misreads_cutoff_cons : int
-            number of mismatches allowed in the constant regions (default 1)
 
         Returns
         -------
@@ -248,27 +263,21 @@ def identification_method(method='standard'):
             dictionary with identification information
 
         """
-        # Init results dict
-        read_map = {'b1': '',
-                    'c1': '',
-                    'c2': '',
-                    'b2': '',
-                    'map': False,
-                    'target_len': barcode.trgt_len}
+        # init return dict
+        read_map = self._init_results(barcode.trgt_len)
 
-        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
-        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
+
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
 
         # Check barcode 1
-        if match(b1, barcode.b1_seq, misreads_cutoff_barcode):
+        if match(b1, barcode.b1_seq, self.cutoff_barcode):
             read_map['b1'] = b1
             # Extract constant region 1, next to barcode 1
             cons1 = read_seq[barcode.b1_len:barcode.c1_len + barcode.b1_len]
             # Check constantant region 1
-            if match(cons1, barcode.c1_seq, misreads_cutoff_cons):
+            if match(cons1, barcode.c1_seq, self.cutoff_cons):
                 # map constant region 2
                 read_map['c1'] = cons1
                 cons2 = read_seq[barcode.b1_len + barcode.c1_len +
@@ -276,7 +285,7 @@ def identification_method(method='standard'):
                                  barcode.b1_len + barcode.c1_len +
                                  barcode.trgt_len + barcode.c2_len]
                 # Check constantant region 1
-                if match(cons2, barcode.c2_seq, misreads_cutoff_cons):
+                if match(cons2, barcode.c2_seq, self.cutoff_cons):
                     read_map['c2'] = cons2
                     # Map design, target seq
                     # design = read_seq[barcode.b1_len + barcode.c1_len:
@@ -289,7 +298,7 @@ def identification_method(method='standard'):
                                   barcode.trgt_len + barcode.c2_len +
                                   barcode.b2_len]
                     # Check Barcode 2
-                    if match(b2, barcode.b2_seq, misreads_cutoff_barcode):
+                    if match(b2, barcode.b2_seq, self.cutoff_barcode):
                         # Success return
 
                         read_map['b2'] = b2
@@ -298,7 +307,8 @@ def identification_method(method='standard'):
 
         return read_map
 
-    def simple(read_seq, barcode, **Kargs):
+    #TODO rename this method
+    def simple(self, read_seq, barcode):
         """if Forward and reverse Barcodes are in the seq.
         without deletions or insertions.
 
@@ -308,8 +318,6 @@ def identification_method(method='standard'):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        misreads_cutoff_barcode :  int
-            number of mismatches allowed in the barcode regions (default 1)
 
         Returns
         -------
@@ -318,19 +326,15 @@ def identification_method(method='standard'):
 
         """
         # Init results dict
-        read_map = {'b1': '',
-                    'c1': '',
-                    'c2': '',
-                    'b2': '',
-                    'map': False,
-                    'target_len': barcode.trgt_len}
+        # init return dict
+        read_map = self._init_results(barcode.trgt_len)
 
-        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
+   
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
         # Check barcode  1
-        if match(b1, barcode.b1_seq, misreads_cutoff_barcode):
+        if match(b1, barcode.b1_seq, self.cutoff_barcode):
             read_map['b1'] = b1
             # Map Barcode 2
             b2 = read_seq[barcode.b1_len + barcode.c1_len + barcode.trgt_len +
@@ -338,7 +342,7 @@ def identification_method(method='standard'):
                           barcode.b1_len + barcode.c1_len + barcode.trgt_len +
                           barcode.c2_len + barcode.b2_len]
             # Check Barcode 2
-            if match(b2, barcode.b2_seq, misreads_cutoff_barcode):
+            if match(b2, barcode.b2_seq, self.cutoff_barcode):
                 # success
                 read_map['b2'] = b2
                 read_map['map'] = True
@@ -346,7 +350,7 @@ def identification_method(method='standard'):
 
         return read_map
 
-    def dynamic(read_seq, barcode, over_end=10, **Kargs):
+    def dynamic(self, read_seq, barcode):
         """if Forward and reverse Barcodes and constant regions  are in the seq.
         deletions or insertions in the target sequences are allowed.
 
@@ -356,11 +360,7 @@ def identification_method(method='standard'):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        misreads_cutoff_barcode :  int
-            number of mismatches allowed in the barcode regions (default 1)
-        misreads_cutoff_cons : int
-            number of mismatches allowed in the constant regions (default 1)
-        over_end : int
+        futher_end : int
             How many up stream over the theorical end of the target position
             should I look for the second constant region
 
@@ -371,41 +371,33 @@ def identification_method(method='standard'):
 
 
         """
-        # Init results dict
-        read_map = {'b1': '',
-                    'c1': '',
-                    'c2': '',
-                    'b2': '',
-                    'map': False,
-                    'target_len': barcode.trgt_len}
-
-        misreads_cutoff_barcode = Kargs['misreads_cutoff_barcode']
-        misreads_cutoff_cons = Kargs['misreads_cutoff_cons']
+        # init return dict
+        read_map = self._init_results(barcode.trgt_len)
 
         # Map Bacode 1, always start at pos 0
         b1 = read_seq[0:barcode.b1_len]
 
         # Check barcode 1
-        if match(b1, barcode.b1_seq, misreads_cutoff_barcode):
+        if match(b1, barcode.b1_seq, self.cutoff_barcode):
             read_map['b1'] = b1
             # Map constant region 1, next to barcode 1
             cons1 = read_seq[barcode.b1_len:barcode.c1_len + barcode.b1_len]
             # Check constant region
-            if match(cons1, barcode.c1_seq, misreads_cutoff_cons):
+            if match(cons1, barcode.c1_seq, self.cutoff_cons):
                 read_map['c1'] = cons1
 
-                # add target distance to over_end, how far up stream
+                # add target distance to self.futher_end, how far up stream
                 # it will check
                 # (insertions)
-                over_end += barcode.trgt_len
+                self.futher_end += barcode.trgt_len
                 # Control dynamic length, speed up on assambled Reverse&Forward
                 # and diff population of sequences
-                if over_end + barcode.b1_len + barcode.c1_len > len(read_seq):
+                if self.futher_end + barcode.b1_len + barcode.c1_len > len(read_seq):
                     return read_map
                 # FLOATING WINDOW
                 # start searching from the very edge of the cons region 1 (empty vectors)
                 # and end  a bit further (insertions)
-                for var_target_len in range(over_end):
+                for var_target_len in range(self.futher_end):
 
                     # extract constant region 2, using float window
                     dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
@@ -422,7 +414,7 @@ def identification_method(method='standard'):
                     logger.debug(dynamic_cons2)
                     # check dynamic region against constant region 2
                     if match(dynamic_cons2, barcode.c2_seq,
-                             misreads_cutoff_cons):
+                             self.cutoff_cons):
                         # save results
                         read_map['c2'] = dynamic_cons2
                         read_map['target_len'] = var_target_len
@@ -433,28 +425,15 @@ def identification_method(method='standard'):
                                       var_target_len + barcode.c2_len +
                                       barcode.b2_len]
                         # Check Barcode 2
-                        if match(b2, barcode.b2_seq, misreads_cutoff_barcode):
+                        if match(b2, barcode.b2_seq, self.cutoff_barcode):
                             read_map['b2'] = b2
                             read_map['map'] = True
                             return read_map
 
         return read_map
 
-    if method == 'quick':
-        return quick
-    elif method == 'standard':
-        return standard
-    elif method == 'simple':
-        return simple
-    elif method == 'dynamic':
-        return dynamic
-    else:
-        raise ValueError('Method {} do not exist'.format(method))
 
-
-
-def single_end(inputfile, barcodes_list, out_dir='demultiplex',
-               dpx_method='standard', **Kargs):
+def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
     """.
 
     Main method to demultiplex Single end sequences from deepSeq.
@@ -479,17 +458,26 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     identification_method
 
     """
+    logger = logging.getLogger(__name__)
 
-    # Select  method
-    identify_seq = identification_method(dpx_method)
+    # init class
+    demultiplexation = Demultiplexation_method(options)
+
+    # Select  method    
+    try:
+        identify_seq = getattr(demultiplexation, dpx_method.lower(),)
+    except AttributeError:
+        logger.Warning('Methods {} does not exit using STANDARD'.format(dpx_method))
+        identify_seq =  getattr(demultiplexation, 'standard',)
+    
     # Control variables
-    save_frequencies = Kargs.get('save_frequencies', True)
+    save_frequencies = options.get('save_frequencies', True)
 
     if save_frequencies:
         # create pandas file to save stats or go to the log file
         gbl_stats = qc.Stats(barcodes_list)
     # Temporal, to finish
-    dump = Kargs.get('dump', False)
+    dump = options.get('dump', False)
 
     # open barcode file handlers
     output = Output_manager(barcodes_list, out_dir)
@@ -515,7 +503,7 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
             # For each barcode
             for barcode in barcodes_list:
 
-                read_match_info = identify_seq(read1_seq, barcode, **Kargs)
+                read_match_info = identify_seq(read1_seq, barcode)
 
                 if read_match_info['map']:
                                         
@@ -533,10 +521,10 @@ def single_end(inputfile, barcodes_list, out_dir='demultiplex',
     #move this out of here
     if save_frequencies:
         # write file
-        time_stamp = time.ctime()
-        fastq_file_name = os.path.basename(inputfile)
-        time_out = '{4}_{1}_{2}_{0}_{3}'.format(*time_stamp.split())
-        fstats_name =  out_dir + '/Stats/Stats_'+ fastq_file_name + '_' + out_dir + '_'+ Kargs['barcode_file'] + time_out
+        seconds_time = int(time.time())
+        fastq_filename = os.path.basename(inputfile)
+        barcode_filename = options['barcode_file']
+        fstats_name =  f'{out_dir}/Stats/Stats_{fastq_filename}_{out_dir}_{barcode_filename}_{seconds_time}'
         gbl_stats.save(fstats_name)
 
     return
@@ -645,6 +633,8 @@ def checking_inputs(opts):
     barcodes_list = barcodes.read(opts.barcode_file)
     [bc.sanity_check() for bc in barcodes_list]
 
+    return 
+
 
 ##############################################################
 ##############################################################
@@ -710,6 +700,12 @@ def get_options():
                         help='Max number of misreading allowed in the constant \
                         constant_region  (default 1)')
 
+    parser.add_argument('--further_end', action="store",
+                        dest="further_end", default=10, type=int,
+                        help='Number of positions to keep looking \
+                        for the 2nd constant region after the target lenght. \
+                        Only applys on dynamic method')
+
     parser.add_argument('--dump', help='Dump constant regions', dest='dump',
                         default=False, action='store_true')
 
@@ -736,11 +732,13 @@ def main():
     opts = get_options()
 
     # init logging
+    seconds_time = int(time.time())
     time_stamp = time.ctime()
+
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename= opts.out_dir + '/Logs/' +'Dmultplx_'+opts.out_dir+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename=  f'{opts.out_dir}/Logs/Dmultplx_{opts.out_dir}_{opts.barcode_file}_{seconds_time}.log',
                         filemode='w')
 
     logger = logging.getLogger(__name__)
@@ -752,11 +750,9 @@ def main():
 
     # init barcodes
     barcodes_list = barcodes.read(opts.barcode_file)
-    # init fastq files
-    fastqs = opts.input_fastqs
 
     # make output folder
-    
+   
     folders_list = barcodes_list + ['Stats', 'Logs']
     makeoutputdirs(barcodes_list, opts.out_dir)
 
@@ -772,9 +768,10 @@ def main():
     logger.info('Stats: {}'.format(opts.save_frequencies))
 
     # Call to the action
+    fastqs = opts.input_fastqs
     for fastq in fastqs:
         logger.info('working on: %s',fastq )
-        single_end(fastq, barcodes_list, **opts.__dict__)
+        single_end(fastq, barcodes_list, opts.out_dir, opts.dpx_method, opts.__dict__)
         logger.info('next...' )
 
 
