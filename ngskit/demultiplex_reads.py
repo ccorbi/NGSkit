@@ -12,15 +12,7 @@ import  ngskit.qc as qc
 
 
 class Output_manager(object):
-    """Managment of the output demultiplexation
-
-        Parameters
-        ----------
-        barcodes_list : array_like
-            array witht he barcode objects
-
-        out_dir : str
-            output directory
+    """Managment of the output data during demultiplexation
 
         Attributes
         ----------
@@ -34,7 +26,16 @@ class Output_manager(object):
 
 
     def __init__(self, barcodes_list, out_dir):
+        """Init method of the class
 
+        Parameters
+        ----------
+        barcodes_list : array_like
+            array witht he barcode objects
+
+        out_dir : str
+            output directory
+        """
         self.output_handlers = dict()
         self.out_dir = out_dir
 
@@ -45,7 +46,16 @@ class Output_manager(object):
 
 
     def add_output(self, barcode, read=False):
+        """Add output in their sample specific file
 
+        Parameters
+        ----------
+        barcodes_list : array_like
+            array witht he barcode objects
+
+        read : bool
+            output directory
+        """
 
         if read:
             file_name = barcode.id + "_" + str(read['target_len']) + "_F.fastq"
@@ -60,13 +70,20 @@ class Output_manager(object):
 
 
     def save_seq(self, read1_id, read1_seq, read1_qual, barcode, read):
-        """Save sequences in a Fastq file. ToDO: use fastq_tools to improve I/O
+        """Save sequences in a Fastq file. 
 
         Parameters
         ----------
-
-        Returns
-        -------
+            read1_id: str
+                Head of the sequence
+            read1_seq: str
+                nucleotide seq
+            read1_qual: str
+                Phred quality string
+            barcode: object
+                Barcode information
+            read; dict
+                details of the match
 
         """
         fileid = barcode.id + "_" + str(read['target_len'])
@@ -84,7 +101,9 @@ class Output_manager(object):
         return
 
     def close(self):
-
+        """Close Outputfiles, emty buffers
+        
+        """ 
 
         for file_handler in self.output_handlers.values():
             file_handler.close()
@@ -153,40 +172,34 @@ def count_mismatches(seq, target):
 class Demultiplexation_method(object):
     """Sequence identification method.
 
-    Parameters
+    Attributes
     ----------
-    method : str
-        Fucntion to identify ssequences in the fastq poll
-        `standard` (default) sequence match both barcodes and constant regions
-        `quick` sequence match barcode and constant  region 1
-        `simple` sequences with both barcodes
-        `dynamic` like `standard` but insertions and deletions in target
+    Function to identify sequences in the fastq poll
+    standard: (default) sequence match both barcodes and constant regions
+    quick: sequence match barcode and constant  region 1
+    simple: sequences with both barcodes
+    dynamic: like `standard` but insertions and deletions in target
          sequence are allowed
-
-    Returns
-    -------
-        function
-
-
-    Raises
-    ------
-        Value Error, if the method to do not exist
+    misreads_cutoff_barcode :  int
+                number of mismatches allowed in the barcode regions (default 1)
+    misreads_cutoff_cons : int
+                number of mismatches allowed in the constant regions (default 1)
 
 
     """
-
     def __init__(self, options):
-        """One liner description.
+        """Init the Class.
 
             Parameters
             ----------
+            options: dict
+                Dictionary containing configuration paramaters:
+
             misreads_cutoff_barcode :  int
                 number of mismatches allowed in the barcode regions (default 1)
             misreads_cutoff_cons : int
                 number of mismatches allowed in the constant regions (default 1)
-            
-            Returns
-            -------
+
 
         """
         logger = logging.getLogger(__name__)
@@ -434,9 +447,7 @@ class Demultiplexation_method(object):
 
 
 def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
-    """.
-
-    Main method to demultiplex Single end sequences from deepSeq.
+    """.Main method to demultiplex Single end sequences from deepSeq.
     No quality score applyed [need improvements]
 
 
