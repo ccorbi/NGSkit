@@ -206,7 +206,7 @@ class Demultiplexation_method(object):
         self.cutoff_barcode = options.get('misreads_cutoff_barcode', 1)
         self.cutoff_cons = options.get('misreads_cutoff_cons', 1)
         self.further_end = options.get('further_end', 10)
-        self.stride = options.get('stride', 10)
+        self.closer_end = options.get('closer_end', 10)
         
 
  
@@ -377,15 +377,21 @@ class Demultiplexation_method(object):
             # add target distance to self.futher_end, how far up stream
             # it will check
             # (insertions)
-            further_end = self.further_end + barcode.trgt_len
+            
+            #further_end = self.further_end + barcode.trgt_len
+
+            target_lens = self._generate_lens(barcode)
+            
             # Control dynamic length, speed up on assambled Reverse&Forward
             # and diff population of sequences
-            if further_end + barcode.b1_len + barcode.c1_len > len(read_seq):
-                return read_map
+
             # FLOATING WINDOW
             # start searching from the very edge of the cons region 1 (empty vectors)
             # and end  a bit further (insertions)
-            for var_target_len in range(further_end):
+            for var_target_len in target_lens:
+
+                if var_target_len + barcode.b1_len + barcode.c1_len > len(read_seq):
+                    return read_map
 
                 # extract constant region 2, using float window
                 dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
@@ -420,6 +426,24 @@ class Demultiplexation_method(object):
 
         return read_map
 
+    def _generate_lens(self, barcode):
+
+        rear =  [i for i in range(barcode.trgt_len - self.closer_end, barcode.trgt_len)]
+        forward = [i for i in range(barcode.trgt_len, self.further_end + barcode.trgt_len)]
+        rear = rear[::-1]
+        target_lens = [0]
+        iter_ = max([len(rear), len(forward)])
+        for i in range(iter_):
+            try:
+                target_lens.append(forward[i])
+            except IndexError:
+                pass
+            try:    
+                target_lens.append(rear[i])
+            except IndexError:
+                pass
+        
+        return target_lens
 
 def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
     """.Main method to demultiplex Single end sequences from deepSeq.
