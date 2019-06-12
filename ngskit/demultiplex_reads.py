@@ -6,10 +6,66 @@ import logging
 import argparse
 import time
 import gzip
+from functools import lru_cache
 
 import  ngskit.barcodes as barcodes
 import  ngskit.qc as qc
 
+@lru_cache(maxsize=512)
+def match(seq, target, cutoff):
+    '''Method used to compare sequence, such barcodes and constant regions.
+
+    Parameters
+    ----------
+    seq : str
+        Nucleotide Sequence trimed from the fastq file .
+    target : str
+        Template to compare, barcode or constant region.
+    cutoff : str
+        Maximum number of diff accepted between the two sequnces.
+    read1_id : str
+        Id of the sequences, to debug purposes. This info and the number of
+        differences is recorder in the log file
+
+    Returns
+    -------
+    boolean
+        False if there are diff over the cutoff
+
+    '''
+    cutoff = int(cutoff)
+    if type(seq) == bytes:
+       seq = seq.decode("utf-8")
+
+    distance = count_mismatches(seq, target)
+
+    if distance > cutoff:
+
+        return False
+    else:
+
+        return True
+
+
+def count_mismatches(seq, target):
+    '''Method used to compare sequence.
+    such barcodes and constant regions.
+
+    Parameters
+    ----------
+    seq : str
+        Nucleotide Sequence trimed from the fastq file .
+    target : str
+        Template to compare, barcode or constant region.
+
+    Returns
+    -------
+    int
+        Mismatches
+    '''
+    distance = Leven.distance(seq, target)
+
+    return distance
 
 class Output_manager(object):
     """Managment of the output data during demultiplexation
@@ -111,64 +167,7 @@ class Output_manager(object):
         return
 
 
-def match(seq, target, cutoff):
-    '''Method used to compare sequence, such barcodes and constant regions.
 
-    Parameters
-    ----------
-    seq : str
-        Nucleotide Sequence trimed from the fastq file .
-    target : str
-        Template to compare, barcode or constant region.
-    cutoff : str
-        Maximum number of diff accepted between the two sequnces.
-    read1_id : str
-        Id of the sequences, to debug purposes. This info and the number of
-        differences is recorder in the log file
-
-    Returns
-    -------
-    boolean
-        False if there are diff over the cutoff
-
-    '''
-    cutoff = int(cutoff)
-    if type(seq) == bytes:
-       seq = seq.decode("utf-8")
-
-    distance = count_mismatches(seq, target)
-
-    if distance > cutoff:
-
-        return False
-    else:
-
-        return True
-
-
-def count_mismatches(seq, target):
-    '''Method used to compare sequence.
-    such barcodes and constant regions.
-
-    Parameters
-    ----------
-    seq : str
-        Nucleotide Sequence trimed from the fastq file .
-    target : str
-        Template to compare, barcode or constant region.
-
-    Returns
-    -------
-    int
-        Mismatches
-    '''
-    distance = Leven.distance(seq, target)
-
-    return distance
-
-
-
-# TO DO, transfor this to a class
 class Demultiplexation_method(object):
     """Sequence identification method.
 
@@ -202,7 +201,7 @@ class Demultiplexation_method(object):
 
 
         """
-        logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         
         self.cutoff_barcode = options.get('misreads_cutoff_barcode', 1)
         self.cutoff_cons = options.get('misreads_cutoff_cons', 1)
@@ -223,7 +222,7 @@ class Demultiplexation_method(object):
 
 
     def quick(self, read_seq, barcode):
-        """Sequence selected if Barcode and constant region 1 are there.
+        """Sequence selected if Barcode 1 and constant region 1 are there.
 
         Parameters
         ----------
@@ -277,45 +276,32 @@ class Demultiplexation_method(object):
 
         """
         # init return dict
-        read_map = self._init_results(barcode.trgt_len)
+        #read_map = self._init_results(barcode.trgt_len)
 
+        read_map = self.quick(read_seq, barcode)
+        if read_map['map'] == True:
+            
+            # check Constant Region 2
+            read_map['map'] = False
+            cons2 = read_seq[barcode.b1_len + barcode.c1_len +
+                                barcode.trgt_len:
+                                barcode.b1_len + barcode.c1_len +
+                                barcode.trgt_len + barcode.c2_len]
 
+            if match(cons2, barcode.c2_seq, self.cutoff_cons):
+                read_map['c2'] = cons2
 
-        # Map Bacode 1, always start at pos 0
-        b1 = read_seq[0:barcode.b1_len]
+                b2 = read_seq[barcode.b1_len + barcode.c1_len +
+                                barcode.trgt_len + barcode.c2_len:
+                                barcode.b1_len + barcode.c1_len +
+                                barcode.trgt_len + barcode.c2_len +
+                                barcode.b2_len]
+                # Check Barcode 2
+                if match(b2, barcode.b2_seq, self.cutoff_barcode):
+                    # Success return
 
-        # Check barcode 1
-        if match(b1, barcode.b1_seq, self.cutoff_barcode):
-            read_map['b1'] = b1
-            # Extract constant region 1, next to barcode 1
-            cons1 = read_seq[barcode.b1_len:barcode.c1_len + barcode.b1_len]
-            # Check constantant region 1
-            if match(cons1, barcode.c1_seq, self.cutoff_cons):
-                # map constant region 2
-                read_map['c1'] = cons1
-                cons2 = read_seq[barcode.b1_len + barcode.c1_len +
-                                 barcode.trgt_len:
-                                 barcode.b1_len + barcode.c1_len +
-                                 barcode.trgt_len + barcode.c2_len]
-                # Check constantant region 1
-                if match(cons2, barcode.c2_seq, self.cutoff_cons):
-                    read_map['c2'] = cons2
-                    # Map design, target seq
-                    # design = read_seq[barcode.b1_len + barcode.c1_len:
-                    #                   barcode.b1_len + barcode.c1_len +
-                    #                   barcode.trgt_len]
-                    # Map barcode 2
-                    b2 = read_seq[barcode.b1_len + barcode.c1_len +
-                                  barcode.trgt_len + barcode.c2_len:
-                                  barcode.b1_len + barcode.c1_len +
-                                  barcode.trgt_len + barcode.c2_len +
-                                  barcode.b2_len]
-                    # Check Barcode 2
-                    if match(b2, barcode.b2_seq, self.cutoff_barcode):
-                        # Success return
-
-                        read_map['b2'] = b2
-                        read_map['map'] = True
+                    read_map['b2'] = b2
+                    read_map['map'] = True
 
 
         return read_map
@@ -385,63 +371,52 @@ class Demultiplexation_method(object):
 
         """
         # init return dict
-        read_map = self._init_results(barcode.trgt_len)
+        read_map = self.quick(read_seq, barcode)
+        if read_map['map'] == True:
+            read_map['map'] = False
+            # add target distance to self.futher_end, how far up stream
+            # it will check
+            # (insertions)
+            further_end = self.further_end + barcode.trgt_len
+            # Control dynamic length, speed up on assambled Reverse&Forward
+            # and diff population of sequences
+            if further_end + barcode.b1_len + barcode.c1_len > len(read_seq):
+                return read_map
+            # FLOATING WINDOW
+            # start searching from the very edge of the cons region 1 (empty vectors)
+            # and end  a bit further (insertions)
+            for var_target_len in range(further_end):
 
-        # Map Bacode 1, always start at pos 0
-        b1 = read_seq[0:barcode.b1_len]
+                # extract constant region 2, using float window
+                dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
+                                            var_target_len: barcode.b1_len +
+                                            barcode.c1_len + var_target_len +
+                                            barcode.c2_len]
+                self.logger.debug('{}_{}_{}:{}_{}_{}_{}'.format(barcode.b1_len,
+                                                            barcode.c1_len,
+                                                            var_target_len,
+                                                            barcode.b1_len,
+                                                            barcode.c1_len,
+                                                            var_target_len,
+                                                            barcode.c2_len))
+                self.logger.debug(dynamic_cons2)
+                # check dynamic region against constant region 2
+                if match(dynamic_cons2, barcode.c2_seq,
+                            self.cutoff_cons):
+                    # save results
+                    read_map['c2'] = dynamic_cons2
+                    read_map['target_len'] = var_target_len
 
-        # Check barcode 1
-        if match(b1, barcode.b1_seq, self.cutoff_barcode):
-            read_map['b1'] = b1
-            # Map constant region 1, next to barcode 1
-            cons1 = read_seq[barcode.b1_len:barcode.c1_len + barcode.b1_len]
-            # Check constant region
-            if match(cons1, barcode.c1_seq, self.cutoff_cons):
-                read_map['c1'] = cons1
-
-                # add target distance to self.futher_end, how far up stream
-                # it will check
-                # (insertions)
-                self.further_end += barcode.trgt_len
-                # Control dynamic length, speed up on assambled Reverse&Forward
-                # and diff population of sequences
-                if self.further_end + barcode.b1_len + barcode.c1_len > len(read_seq):
-                    return read_map
-                # FLOATING WINDOW
-                # start searching from the very edge of the cons region 1 (empty vectors)
-                # and end  a bit further (insertions)
-                for var_target_len in range(self.further_end):
-
-                    # extract constant region 2, using float window
-                    dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
-                                             var_target_len: barcode.b1_len +
-                                             barcode.c1_len + var_target_len +
-                                             barcode.c2_len]
-                    logger.debug('{}_{}_{}:{}_{}_{}_{}'.format(barcode.b1_len,
-                                                               barcode.c1_len,
-                                                               var_target_len,
-                                                               barcode.b1_len,
-                                                               barcode.c1_len,
-                                                               var_target_len,
-                                                               barcode.c2_len))
-                    logger.debug(dynamic_cons2)
-                    # check dynamic region against constant region 2
-                    if match(dynamic_cons2, barcode.c2_seq,
-                             self.cutoff_cons):
-                        # save results
-                        read_map['c2'] = dynamic_cons2
-                        read_map['target_len'] = var_target_len
-
-                        b2 = read_seq[barcode.b1_len + barcode.c1_len +
-                                      var_target_len + barcode.c2_len:
-                                      barcode.b1_len + barcode.c1_len +
-                                      var_target_len + barcode.c2_len +
-                                      barcode.b2_len]
-                        # Check Barcode 2
-                        if match(b2, barcode.b2_seq, self.cutoff_barcode):
-                            read_map['b2'] = b2
-                            read_map['map'] = True
-                            return read_map
+                    b2 = read_seq[barcode.b1_len + barcode.c1_len +
+                                    var_target_len + barcode.c2_len:
+                                    barcode.b1_len + barcode.c1_len +
+                                    var_target_len + barcode.c2_len +
+                                    barcode.b2_len]
+                    # Check Barcode 2
+                    if match(b2, barcode.b2_seq, self.cutoff_barcode):
+                        read_map['b2'] = b2
+                        read_map['map'] = True
+                        return read_map
 
         return read_map
 

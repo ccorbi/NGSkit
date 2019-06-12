@@ -2,8 +2,6 @@
 """
 Collection of tools for sequence analysis
 """
-from __future__ import print_function
-from __future__ import division
 import random
 from multiprocessing import Pool
 import math
