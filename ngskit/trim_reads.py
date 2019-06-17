@@ -100,7 +100,7 @@ def trimming(demultiplexed_fastq, barcode, quality_threshold,
             try:
                 avg_quality = sum(target_qual)/float(len(target_qual))
             except ZeroDivisionError:
-                logger.error('Sequence with no lenght or no score')
+                logger.error('Sequence with no lenght or no score', exc_info=True)
                 logger.error(read1_seq,read1_qual,target_qual,target_qual,trgt_len)
                 sys.exit()
             if len(target_sequence) == trgt_len and avg_quality >= quality_threshold:
