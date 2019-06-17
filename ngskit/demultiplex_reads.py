@@ -477,7 +477,7 @@ def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
     try:
         identify_seq = getattr(demultiplexation, dpx_method.lower(),)
     except AttributeError:
-        logger.Warning('Methods {} does not exit using STANDARD'.format(dpx_method))
+        logger.Warning('Methods {} does not exit using STANDARD'.format(dpx_method),  exc_info=True)
         identify_seq =  getattr(demultiplexation, 'standard',)
     
     # Control variables
@@ -586,7 +586,7 @@ def makeoutputdirs(barcode_list, output_dir):
             e = sys.exc_info()
             # print 'Warning, Folder',out_folder,' already exist'
             print('Warning {}'.format(e[1]))
-            logger.info('Folder {} already exist'.format(out_folder))
+            logger.info('Folder {} already exist'.format(out_folder), exc_info=True)
 
     return
 
