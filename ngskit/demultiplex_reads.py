@@ -741,6 +741,17 @@ def main():
     # Read arguments
     opts = get_options()
 
+    # Check inputs consistency
+    checking_inputs(opts)
+
+    # init barcodes
+    barcodes_list = barcodes.read(opts.barcode_file)
+
+    # make output folder
+    
+    folders_list = barcodes_list + ['Stats', 'Logs']
+    makeoutputdirs(barcodes_list, opts.out_dir)
+
     # init logging
     seconds_time = int(time.time())
     time_stamp = time.ctime()
@@ -755,18 +766,7 @@ def main():
 
     logger.info('JOB START {4} {1} {2} {0} {3}'.format(*time_stamp.split()))
 
-    # Check inputs consistency
-    checking_inputs(opts)
-
-    # init barcodes
-    barcodes_list = barcodes.read(opts.barcode_file)
-
-    # make output folder
-   
-    folders_list = barcodes_list + ['Stats', 'Logs']
-    makeoutputdirs(barcodes_list, opts.out_dir)
-
-    # Init Logging
+    # Logging Basic
     logger.info('#### DEMULTIPLEXING ####')
     logger.info('Method: {}'.format(opts.dpx_method))
     logger.info('FastQ: {}'.format(opts.input_fastqs))
