@@ -162,4 +162,4 @@ if __name__ == '__main__':
     print('Seqs wiht E>0 {}'.format(ent.shape[0]))
 
     
-    results.to_csv('{}_{}_preprocess.csv'.format(opts.output_file), index=False)
+    results.to_csv('{}_preprocess.csv'.format(opts.output_file), index=False)

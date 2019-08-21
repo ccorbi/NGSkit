@@ -80,7 +80,8 @@ class Barcode(object):
         for element, seq in self.elements.items():
             for n in seq:
                 if n not in ['A', "C", 'T', 'G']:
-                    print('WARNING CHECK: {} {}'.format( element, seq))
+                    print('WARNING CHECK: {} {}  on {}'.format( element, seq, self.id))
+
 
 
     def reverse_comple(self, item):
@@ -184,14 +185,14 @@ def find_min(seq_bag):
                         dmin = dist
     return dmin
 
-def recomend_mininal(barcodes, token):
-    seq_bag =list()
+def recomend_mininal(barcodes):
+    #seq_bag =list()
     #for token in ['b1','c1', 'b2','c2']:
-    for barcode in barcodes:
-        seq_bag.append(barcode.elements[token])
-    minim = find_min(seq_bag)
+    #for barcode in barcodes:
+    #    seq_bag.append(barcode.elements[token])
+    minim = find_min(barcodes)
 
-    return minim + 1
+    return minim
 
 
 def main():
@@ -252,6 +253,8 @@ def main():
         print(e)
         pass
 
+
+
     # Output format
     if options.out_prefix:
         template_file_name = options.out_prefix
@@ -267,6 +270,23 @@ def main():
             b = read('{}_{}.barcode'.format(template_file_name, idx))
         except:
             print('Error in the barcodes Format')
+
+    
+
+    # Warning
+    print('')
+    print('WARNINGS')
+    minimal = recomend_mininal(excel_barcode[1])
+    print(f'Minimal Hamming distance on Barcode 1 is :: {minimal}')
+
+    minimal = recomend_mininal(excel_barcode[2])
+    print(f'Minimal Hamming distance on Constant region 1 is :: {minimal}') 
+
+    minimal = recomend_mininal(excel_barcode[3])
+    print(f'Minimal Hamming distance on Constant region 2 is :: {minimal}')     
+
+    minimal = recomend_mininal(excel_barcode[4])
+    print(f'Minimal Hamming distance on Barcode 2 is :: {minimal}')   
     
 if __name__ == '__main__':
     main()

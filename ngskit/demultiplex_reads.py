@@ -533,7 +533,8 @@ def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
         # write file
         seconds_time = int(time.time())
         fastq_filename = os.path.basename(inputfile)
-        barcode_filename = options['barcode_file']
+        barcode_filename = options['barcode_file'].rpartition('/')[-1]
+
         fstats_name =  f'{out_dir}/Stats/Stats_{fastq_filename}_{out_dir}_{barcode_filename}_{seconds_time}'
         gbl_stats.save(fstats_name)
 
@@ -706,7 +707,7 @@ def get_options():
                         constant_region (default 2)')
 
     parser.add_argument('--misreads_cutoff_barcode', action="store",
-                        dest="misreads_cutoff_barcode", default=1, type=int,
+                        dest="misreads_cutoff_barcode", default=0, type=int,
                         help='Max number of misreading allowed in the constant \
                         constant_region  (default 1)')
 
@@ -750,16 +751,18 @@ def main():
     # make output folder
     
     folders_list = barcodes_list + ['Stats', 'Logs']
-    makeoutputdirs(barcodes_list, opts.out_dir)
+    makeoutputdirs(folders_list, opts.out_dir)
 
     # init logging
     seconds_time = int(time.time())
     time_stamp = time.ctime()
 
+    outfolder_name= opts.out_dir.rpartition('/')[-1]
+    barcode_name = opts.barcode_file.rpartition('/')[-1]
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename=  f'{opts.out_dir}/Logs/Dmultplx_{opts.out_dir}_{opts.barcode_file}_{seconds_time}.log',
+                        filename=  f'{opts.out_dir}/Logs/Dmultplx_{outfolder_name}_{barcode_name}_{seconds_time}.log',
                         filemode='w')
 
     logger = logging.getLogger(__name__)
