@@ -535,7 +535,7 @@ def single_end(inputfile, barcodes_list, out_dir, dpx_method, options):
         fastq_filename = os.path.basename(inputfile)
         barcode_filename = options['barcode_file'].rpartition('/')[-1]
 
-        fstats_name =  f'{out_dir}/Stats/Stats_{fastq_filename}_{out_dir}_{barcode_filename}_{seconds_time}'
+        fstats_name =  f'{out_dir}/Stats/Stats_{fastq_filename}_{barcode_filename}_{seconds_time}'
         gbl_stats.save(fstats_name)
 
     return
@@ -757,12 +757,12 @@ def main():
     seconds_time = int(time.time())
     time_stamp = time.ctime()
 
-    outfolder_name= opts.out_dir.rpartition('/')[-1]
+    # outfolder_name= opts.out_dir.rpartition('/')[-1]
     barcode_name = opts.barcode_file.rpartition('/')[-1]
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename=  f'{opts.out_dir}/Logs/Dmultplx_{outfolder_name}_{barcode_name}_{seconds_time}.log',
+                        filename=  f'{opts.out_dir}/Logs/Dmultplx_{barcode_name}_{seconds_time}.log',
                         filemode='w')
 
     logger = logging.getLogger(__name__)

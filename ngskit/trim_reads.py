@@ -202,10 +202,11 @@ def main():
 
     # init logging
     time_stamp = time.ctime()
+    seconds_time = int(time.time())
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         datefmt='%m-%d %H:%M',
-                        filename= 'Trimming_'+opts.input_folder.replace('/','')+'_'+opts.barcode_file+'_{4}_{1}_{2}_{0}_{3}.log'.format(*time_stamp.split()),
+                        filename=  opts.input_folder+ '/Logs/Trimming_'+opts.input_folder.rpartition('/')[-1]+'_'+opts.barcode_file+'_{}.log'.format(seconds_time),
                         filemode='w')
     logger = logging.getLogger(__name__)
 
@@ -236,6 +237,7 @@ def main():
     for barcode in barcodes_list:
         logger.info('Triming Sample: {}'.format(barcode.id))
         # folder must == sample id in the barcode
+        # TODO: need to improve this line, it can be problematic
         working_folder = './'+opts.input_folder+'/'+barcode.id+'/'
         # get all fastq under the folder
         for demultiplexed_fastq in os.listdir(working_folder):

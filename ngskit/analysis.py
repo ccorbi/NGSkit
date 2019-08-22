@@ -1034,7 +1034,7 @@ def generate_logo(sequences, seq_len=80, filename='designs', **kwargs  ):
     ohandler.close()
     
     base_commd = 'weblogo -f {} -o {}'.format(filename + '.fasta',
-                                                     filename + '.{}'.format(fformat))
+                                              filename + '.{}'.format(options['format']))
     # apply kwargs here
     for label, data in options.items():
         if data:
