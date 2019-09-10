@@ -14,6 +14,9 @@ import sklearn.cluster
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import  silhouette_score
 from Bio.SubsMat import MatrixInfo
+from  scipy.stats import entropy
+
+from ngskit.utils.alphabets import *
 
 AMINOACIDS = ["R", "H", "K", "D", "E", "S", "T", "N", "Q", "C",
     "G", "P", "A", "V", "I", "L", "M", "F", "Y", "W", ]
@@ -196,13 +199,12 @@ def dist_PWM(pwm1, pwm2):
     return sum(colum)/float(w)
 
 
-
-def entropy_bypos(sequences):
-    """return a array with entropy for each postion.
+def get_pem(sequences, alphabet):
+    """return a matrix with IC for each postion and base/aminoacid.
 
     Parameters
     ----------
-    ppm: pandas.DataFrame()
+    seq: array like sequences
 
     Returns
     -------
@@ -211,18 +213,33 @@ def entropy_bypos(sequences):
     """
 
     ppm = get_ppm(sequences, pseudocounts=0)
-    entropy_vec = np.empty(ppm.shape[1])
+    #entropy_vec = np.empty(ppm.shape[1])
+    # small-sample correction
+    n = len(sequences)
+    ss_correction = (1/np.log(2)) * ( (len(alphabet) - 1) /  (2*n ) ) 
+
+
     # for position
-    for idx, a in enumerate(ppm.columns):
-        e = np.empty(ppm.shape[0])
-        # get entropy for all aminoacids
-        for jdx, i in enumerate(ppm.index.get_values()):
-            prob = ppm.at[i,a]
-            e[jdx] = prob*(np.log(prob)/np.log(20))
 
-        entropy_vec[idx] = -1 * np.nansum(e)
+    bits_df = freq2bits(ppm, ss_correction, alphabet)
 
-    return entropy_vec
+    return bits_df
+
+def freq2bits(df, ss_correction = 0, alphabet = ['A', 'C', 'G', 'T']):
+
+    # each row is a position
+    new_matrix  = list()
+    for idx, c in enumerate(df.columns):
+        h = entropy(df[c].values, base=2)
+        # no correction here
+        r = np.log2(len(alphabet)) - ( h + ss_correction )
+        temp = df[c].values*r
+        new_matrix.append(temp.tolist())
+        #new_matrix = np.asarray(new_matrix)
+    bits_df = pd.DataFrame(new_matrix, columns=alphabet)
+
+    return bits_df.T
+
 
 def mi_matrix(sequences, n_jobs=4):
 
@@ -659,14 +676,7 @@ class ScoreDistribution(object):
 # 
 #
 
-def rand_peptide(n=7):
 
-    rpep = list()
-
-    for i in range(n):
-        rpep.append(random.choice(AMINOACIDS))
-
-    return ''.join(rpep)
 
 
 data = [ ['A', 142,   83,   66,   0.06,   0.076,  0.035,  0.058]
