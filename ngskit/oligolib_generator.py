@@ -186,7 +186,7 @@ class peptide_library(object):
             print("{} :\t{}".format(arg, self.__getattribute__(arg)))
 
         n = len(self._aalibrary)
-        print("{} :\t{}".format('Seq in the lib', self.__getattribute__(n)))
+        print("{} :\t{}".format('Seq in the lib', n))
 
         return
 
@@ -276,6 +276,7 @@ class peptide_library(object):
 
 
         """
+        print('WARNING: ADDING_STOP: {} - EXTENDING SEQUENCES {}'.format(add_stop_codon, extend) )
         if file_name == '':
             file_name = self.lib_name + '.fasta'
 
@@ -291,7 +292,7 @@ class peptide_library(object):
 
             seq_dna = translate2na(seq, species=self.codon_usage_species)
             # check for the restriction sites
-            seq_dna_checked = clean_restriction_sites(seq_dna, self.restriction_enzymes)
+            seq_dna_checked = clean_restriction_sites(seq_dna, flank1 = CONSTANT_F[-1], flank2 = CONSTANT_R[0], dict_restriction = self.restriction_enzymes)
 
             # add double stop codons at the end
             if add_stop_codon:
@@ -369,6 +370,7 @@ class peptide_library(object):
 
 
         """
+        # TODO: Too Slow
         for _ in range(nsize):
             self._aalibrary.pop(random.choice(list(self._aalibrary)))
 

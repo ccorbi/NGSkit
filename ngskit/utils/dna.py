@@ -17,8 +17,8 @@ import random
 import operator
 import functools
 
-#from ngskit.utils.codons_info import *
-from .codons_info import *
+from ngskit.utils.codons_info import *
+# from .codons_info import *
 
 
 def translate2aa(nseq, start=1):
@@ -79,10 +79,12 @@ def translate2na(seq, species='human'):
     """
     seq_na = []
     for a in seq:
-        codons = A2C_DICT.get(a)
+        codons = A2C_DICT.get(a, 0)
+        
+        assert codons != 0, 'There is not codon for residue  {}'.format(a)
+
         seq_na.append(codon_weighted_random_choice(codons, species))
 
-    # print(random.choice(foo))
     return ''.join(seq_na)
 
 
@@ -121,10 +123,14 @@ def codon_weighted_random_choice(codons, species):
         # may be this could be a warning, and call human codon usage
         raise ValueError('{} is not a valid species'.format(species))
 
+    assert codons != 0, 'Codons list empty when trying to randomly select one'
+
     weights = 0
     elems = []
     for elem in codons:
+        
         w = weight_dictionary.get(elem)
+        
         try:
             is_neg = w < 0
         except TypeError:
@@ -151,7 +157,7 @@ def codon_weighted_random_choice(codons, species):
     return elems[ix][1]
 
 
-def clean_restriction_sites(naseq, dict_restriction=['GAATTC', 'CCCGGG', 'GTCGAC']):
+def clean_restriction_sites(naseq, flank1='', flank2='', dict_restriction=['GAATTC', 'CCCGGG', 'GTCGAC']):
     """Check if there is a restriction site for any of the enzymes in
         self.set_restriction_enzyme for a sequence. if it could find one, the
         afected codon is retranslated, that will generate a codon selection,  and it
@@ -182,7 +188,7 @@ def clean_restriction_sites(naseq, dict_restriction=['GAATTC', 'CCCGGG', 'GTCGAC
     while not clean:
 
         ilimit += 1
-        matches = has_restriction_sites(naseq, dict_restriction)
+        matches = has_restriction_sites(flank1 + naseq + flank2, dict_restriction)
 
         if len(matches) == 0:
 
