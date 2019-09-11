@@ -371,6 +371,21 @@ aa_ttHydrophobicity = {'D':  -3.27,
                     'W':  1.53,
                     'Y':  0.49}
 
+
+dna_mass = {
+    "A": 347.,
+    "C": 323.,
+    "G": 363.,
+    "T": 322.,
+}
+
+rna_mass = {
+    "A": 363.,
+    "C": 319.,
+    "G": 379.,
+    "U": 340.,
+}
+
 ## aggregated properties
 
 aa_property_tables= {'hydrophobicity': aa_hydrophobicity,

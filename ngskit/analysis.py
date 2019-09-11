@@ -9,12 +9,16 @@ from functools import partial
 import subprocess
 import pandas as pd
 import numpy as np
+
 import sklearn.metrics
 import sklearn.cluster
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import  silhouette_score
+
 from Bio.SubsMat import MatrixInfo
+
 from  scipy.stats import entropy
+from scipy.spatial.distance import cdist
 
 from .utils.alphabets import *
 from .utils.seqs import *
@@ -184,6 +188,23 @@ def dist_PWM(pwm1, pwm2):
         colum.append(  np.sqrt(sum(rows)))
 
     return sum(colum)/float(w)
+
+
+def ndist_PWM(pwm1, pwm2):
+    """Normalized Euclidina distance introduced by Harbison et al 
+    (Harbison et al 2004).  The score is between 1 complete dis-similar,
+     and 0, perfect identity, and a distance of 0.20 indicates that 
+     the two motifs differ by about 20%. We can consider to PWM to 
+     represent the same motif is they score below 0.18
+     
+    """
+
+    re = list()
+    
+    dist = cdist(pwm1.values.T,pwm2.values.T)
+    for c in pwm1.columns:    
+        re.append(dist[c][c])
+    return (1/(np.sqrt(2)* 7))*sum(re)
 
 
 def get_pem(sequences, alphabet):
