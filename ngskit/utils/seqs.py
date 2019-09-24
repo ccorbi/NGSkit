@@ -389,14 +389,14 @@ rna_mass = {
 
 ## aggregated properties
 
-aa_property_tables= {'hydrophobicity': aa_hydrophobicity,
-                    'volume': aa_volume,
-                    'polarity':aa_polarity,
-                    "pK":aa_pK,
-                    "hydrophilicity":aa_hydrophilicity,
-                    "asa":aa_asa,
-                    "local_flexibility":aa_local_flexibility,
-                    "mass":aa_mass,
-                    "charge": aa_charge
-
-}
+#aa_property_tables= {'hydrophobicity': aa_kdHydrophobicity,
+#                    'volume': aa_volume,
+#                    'polarity':aa_polarity,
+#                    "pK":aa_pK,
+#                    "hydrophilicity":aa_hydrophilicity,
+#                    "asa":aa_asa,
+#                    "local_flexibility":aa_local_flexibility,
+#                    "mass":aa_mass,
+#                    "charge": aa_charge
+#
+#}
