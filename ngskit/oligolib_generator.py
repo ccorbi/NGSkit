@@ -50,7 +50,9 @@ import argparse
 import time
 
 from collections import OrderedDict
-import Levenshtein as ltein
+import Levenshtein as lstn
+from tqdm.auto import tqdm
+
 from ngskit.utils.dna import (translate2aa, translate2na, clean_restriction_sites)
 
 
@@ -165,6 +167,7 @@ class peptide_library(object):
         # Init Internal Variables
 
         self._aalibrary = OrderedDict()
+        self._nalibrary = OrderedDict()
 
         if self.include_template:
 
@@ -230,7 +233,7 @@ class peptide_library(object):
 
         # Open file
         with open(seq_file, 'r') as input_file:
-            for line in input_file:
+            for line in tqdm(input_file):
                 # if the file is empty or is a comment, skip
                 if len(line.strip()) == 0 or line.startswith('#'):
                     continue
@@ -288,7 +291,7 @@ class peptide_library(object):
         # This can be improved
         SPACER = 'TGATAATAGTAATAGTGATAGTGATAATGATAATGA'
 
-        for seq, seq_id in self._aalibrary.items():
+        for seq, seq_id in tqdm(self._aalibrary.items()):
 
             seq_dna = translate2na(seq, species=self.codon_usage_species)
             # check for the restriction sites
@@ -321,6 +324,8 @@ class peptide_library(object):
             print('>{}_{}'.format(seq_id, seq), file=output)
             print(CONSTANT_F + seq_dna_checked.lower() +
                   stop + refill_seq + CONSTANT_R, file=output)
+            # internal saving
+            self._nalibrary[seq_id] = CONSTANT_F + seq_dna_checked.lower() + stop + refill_seq + CONSTANT_R
 
         output.close()
 
@@ -947,7 +952,7 @@ def check_lib_integrty(file_library, master_seq, oligo_length,
                                                                            template, seq))
 
                 if mut == 'SV':
-                    if ltein.distance(master_seq, template) != 1:
+                    if lstn.distance(master_seq, template) != 1:
                         print('ERROR  more mut than spectected in a SV {} {} {} {} {} {}'.format(pep,
                                                                                                  mut,
                                                                                                  num,
@@ -956,7 +961,7 @@ def check_lib_integrty(file_library, master_seq, oligo_length,
                                                                                                  seq))
 
                 if mut == 'RA':
-                    if ltein.distance(master_seq, template) != 2:
+                    if lstn.distance(master_seq, template) != 2:
                         print('ERROR  more mut than spectected in a RA {} {} {} {} {} {}'.format(pep,
                                                                                                  mut,
                                                                                                  num,
