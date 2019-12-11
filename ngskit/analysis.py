@@ -207,16 +207,22 @@ def ndist_PWM(pwm1, pwm2):
     return (1/(np.sqrt(2)* 7))*sum(re)
 
 
-def get_pem(sequences, alphabet):
+def get_pem(sequences, alphabet, apply_correction=True):
     """return a matrix with IC for each postion and base/aminoacid.
 
     Parameters
     ----------
-    seq: array like sequences
+    sequences: array_like
+        aligned sequences 
+    alphabet: array_like 
+        DNA, RNA or protein alphabet
+    apply_correction: bool, optional
+        the small-sample correction for an alignment of n letters
 
     Returns
     -------
-    array
+    Pandas Dataframe
+        Matrix contaning the the information content for each letter and position
 
     """
 
@@ -224,7 +230,11 @@ def get_pem(sequences, alphabet):
     #entropy_vec = np.empty(ppm.shape[1])
     # small-sample correction
     n = len(sequences)
-    ss_correction = (1/np.log(2)) * ( (len(alphabet) - 1) /  (2*n ) ) 
+    if apply_correction:
+        E = 1/np.log(2)
+        ss_correction = E * ( (len(alphabet) - 1) /  (2*n ) ) 
+    else:
+        ss_correction = 0.0 
 
 
     # for position
@@ -721,7 +731,7 @@ def generate_logo(sequences, seq_len=80, filename='designs', **kwargs  ):
     # apply kwargs here
     for label, data in options.items():
         if data:
-            base_commd = base_commd + f'--{label} {data} '
+            base_commd = base_commd + f' --{label} {data} '
 
     
     
@@ -732,7 +742,7 @@ def generate_logo(sequences, seq_len=80, filename='designs', **kwargs  ):
         print(error, output)
         print(base_commd)
 
-    return
+    return      
 
 
 
