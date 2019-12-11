@@ -75,7 +75,7 @@ optional arguments:
                         Do not Save match frequencies
 ```
 
-# NGS Treatment: Trimming
+## Trimming
 
 Trimming Fastq sequences tool Usage Trimming:
 
