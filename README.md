@@ -1,4 +1,3 @@
-
 [![travis](https://img.shields.io/travis/kimlaborg/kmtools.svg?style=flat-square)](https://travis-ci.org/kimlaborg/NGSKit/)
 [![codecov](https://img.shields.io/codecov/c/github/kimlaborg/kmtools.svg?style=flat-square)](https://codecov.io/gh/kimlaborg/NGSKit)
 
@@ -8,7 +7,17 @@ This repository contains the full collection of tools of our lab preprocessing N
 
 The package can be divided into three different sets of tools; NGS preprocessing data, secondly tools and pipelines for analysis of the screening, and finally, the library encoding tools.
 
-## Installing
+# References
+
+**A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase.** Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
+Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3.
+
+**A multi-reporter bacterial 2-hybrid assay for the fast, simple, and dynamic assay of PDZ domain – peptide interactions.**
+Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus. ACS Synth Biol. 2019 Apr 18. doi: 10.1021/acssynbio.8b00499.
+(DATA)[https://zenodo.org/record/2580337#.Xff0VtF7mV4]
+
+
+# Installing
 
 ```bash
 pip install -r requirements.txt   . 
@@ -112,14 +121,6 @@ optional arguments:
 # Library generator
 
 This module contains functions and tools to translate a library of peptides or protein into a nucleotide library. Among other options, the library can be encoded with custom flanking adaptors, restriction enzymes cleaving sites and using preferred codon usages.Check the notebooks folder for some examples. 
-
-# References
-
-**A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase.** Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
-Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3.
-
-**A multi-reporter bacterial 2-hybrid assay for the fast, simple, and dynamic assay of PDZ domain – peptide interactions.**
-Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus. ACS Synth Biol. 2019 Apr 18. doi: 10.1021/acssynbio.8b00499.
 
 
 # Acknowledgement
