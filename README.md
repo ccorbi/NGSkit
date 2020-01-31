@@ -7,6 +7,7 @@ This repository contains the full collection of tools of our lab preprocessing N
 
 The package can be divided into three different sets of tools; NGS preprocessing data, secondly tools and pipelines for analysis of the screening, and finally, the library encoding tools.
 
+## NGSkit utilized on the subsequent papers.
 
 **A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase.** Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F. Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3. [DATA](https://zenodo.org/record/3633357#.XjSXkuF7lGo)
 
