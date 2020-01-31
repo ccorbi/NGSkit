@@ -8,8 +8,7 @@ This repository contains the full collection of tools of our lab preprocessing N
 The package can be divided into three different sets of tools; NGS preprocessing data, secondly tools and pipelines for analysis of the screening, and finally, the library encoding tools.
 
 
-**A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase.** Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F.
-Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3. [DATA](https://zenodo.org/record/3633357#.XjSXkuF7lGo)
+**A PxL motif promotes timely cell cycle substrate dephosphorylation by the Cdc14 phosphatase.** Kataria M, Mouilleron S, Seo MH, Corbi-Verge C, Kim PM, Uhlmann F. Nat Struct Mol Biol. 2018 Nov 19. doi: 10.1038/s41594-018-0152-3. [DATA](https://zenodo.org/record/3633357#.XjSXkuF7lGo)
 
 **A multi-reporter bacterial 2-hybrid assay for the fast, simple, and dynamic assay of PDZ domain – peptide interactions.**
 Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victoria; Stagljar, Igor; Kim, Philip; Noyes, Marcus. ACS Synth Biol. 2019 Apr 18. doi: 10.1021/acssynbio.8b00499.
@@ -122,6 +121,7 @@ Small utility to setup sample barcodes into the format to be used by the demulti
 usage: barcodes [-h] -b BARCODE_FILE [-o OUT_PREFIX] [--rc_b2] [--rc_c2]
                 [--skip_header]
 
+<<<<<<< HEAD
 Barcodes tool Usage : %prog -b [BarCode_file.excel] -o [to_demultiplex_]
 
 optional arguments:
@@ -142,6 +142,8 @@ This module contains functions and tools to translate a library of peptides or p
 
 # Analysis Tools
 
+=======
+>>>>>>> e0af60ecdde084327d3d9a1a04c630cfc4419b6f
 
 # Acknowledgement
 
