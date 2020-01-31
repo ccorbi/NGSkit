@@ -122,7 +122,6 @@ Small utility to setup sample barcodes into the format to be used by the demulti
 usage: barcodes [-h] -b BARCODE_FILE [-o OUT_PREFIX] [--rc_b2] [--rc_c2]
                 [--skip_header]
 
-<<<<<<< HEAD
 Barcodes tool Usage : %prog -b [BarCode_file.excel] -o [to_demultiplex_]
 
 optional arguments:
@@ -143,8 +142,7 @@ This module contains functions and tools to translate a library of peptides or p
 
 # Analysis Tools
 
-=======
->>>>>>> e0af60ecdde084327d3d9a1a04c630cfc4419b6f
+
 
 # Acknowledgement
 
