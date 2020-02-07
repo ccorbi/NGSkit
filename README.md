@@ -43,7 +43,7 @@ pip install -r requirements.txt   .
 
 
 
-# NGS Preprocessing Data.
+# NGSkit preprocessing data tools.
 
 Screenings samples are usually pooled sequenced using illimuna sequencing technology. Each sample is barcoded with a short nucleotide sequence. The preprocessing is divided into two independent steps, demultiplexing and trimming. This design was chossed to facilitate troubleshooting.  The first step is to read the output file from the sequencing filtering low-quality reads. Files can be demultiplexed on the spot, but it can help full under certain circumstances to have more control of this step. 
 During the Trimming step, the target sequence is extracted from the flanking sequences to troubleshoot. A few extra options can be activate,  allowing, for instance, dynamic length extraction. 
@@ -150,8 +150,17 @@ This module contains functions and tools to translate a library of peptides or p
 **Barcodes and QC**
 
 Before running the entire pipeline, it is strongly recommended to check the quality of the raw data. It is planned to incorporate this functionality in demultiplexing utility, but in the meantime, you can use a third-party tool. There are many tools to get a report on your file. For instance [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-Also, determine is you need to stitch both reverse and forward Fastq files. This is not yet implemented, but again you can use a tool like [Pandaseq](https://github.com/neufeld/pandaseq)
+Also, determine is you need to stitch both reverse and forward Fastq files. This is not yet implemented, but again you can use a tool like [Pandaseq](https://github.com/neufeld/pandaseq). 
 
+- *Example pandaseq*
+
+```bash
+
+pandaseq  -f lab_S1_R1_001.fastq.gz -r lab_S1_R2_001.fastq.gz -A ea_util  -F -w merged_file_20180303.fastq -l merge.log 
+```
+
+ - *Example barcode file*
+  
 Before demultiplexing, we need to create a text file with the information of each barcode. 
 
 
@@ -161,7 +170,11 @@ Before demultiplexing, we need to create a text file with the information of eac
 | Sample_2  |  CTTT  | TGTGGGTC   | AGGATG  | CATT  | 21 |
 
 
-Sample Name will use to identify files and folder, need to be unique. In the case, there is not a secondary barcode or constant regions; it is needed to add a dash '-' to the empty field.
+Sample name will be use to identify files and folders,so need to be unique  and spaces in the name are not allowed. In the case, there is not a secondary barcode or constant regions; it is needed to add a dash '-' to the empty field. All the barcodes need to be in 5` -> 3'.
+
+```bash
+barcodes -b PDZ_illumina.xlsx -o test_PDZ
+```
 
 The easiest way to do it is to create an excel file with all barcodes with the latter format and run the barcode utility to generate the text file. By default, the utility will make an individual file for a sample. This behaviour is intended to embarrassing parallelize the demultiplexing process by running an independent process over the same raw data but can be modified. If you need another approach, please check the input parameters of both demultiplex and barcode utilities. 
 
@@ -204,6 +217,6 @@ You can parse bowtie output using counter_map_reads.py  or any other custom tool
 
 
 
-# Acknowledgement
+# Acknowledgements
 
 This code have been inspired by the combination of script wrote by Juhyun Jeon. I incorporate also a lot of valuable feedback from Satra Nim and Alexey Strokach. Everything under the supervision of Prof. Philip M Kim. 
