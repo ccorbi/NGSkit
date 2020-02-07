@@ -16,7 +16,7 @@ Ichikawa, David; Corbi-Verge, Carles; Shen, Michael; Snider, Jamie; Wong, Victor
 [DATA](https://zenodo.org/record/2580337#.Xff0VtF7mV4)
 
 
-# Installing
+# Install
 
 ```bash
 pip install -r requirements.txt   . 
@@ -140,7 +140,67 @@ optional arguments:
 
 This module contains functions and tools to translate a library of peptides or protein into a nucleotide library. Among other options, the library can be encoded with custom flanking adaptors, restriction enzymes cleaving sites and using preferred codon usages.Check the notebooks folder for some examples. 
 
-# Analysis Tools
+
+# Analysis 
+
+- **TBC**
+
+# Preprocessing Example
+
+**Barcodes and QC**
+
+Before running the entire pipeline, it is strongly recommended to check the quality of the raw data. It is planned to incorporate this functionality in demultiplexing utility, but in the meantime, you can use a third-party tool. There are many tools to get a report on your file. For instance [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+Also, determine is you need to stitch both reverse and forward Fastq files. This is not yet implemented, but again you can use a tool like [Pandaseq](https://github.com/neufeld/pandaseq)
+
+Before demultiplexing, we need to create a text file with the information of each barcode. 
+
+
+|Sample name   | Barcode 5'   |Constant Region 5'   | Constant Region 3'  | Barcode 3'   | Design region length   |
+|---|---|---|---|---|---|
+| Sample_1  | CATA  | TGTGGGTC   | AGGATG  | CATT  | 21   |
+| Sample_2  |  CTTT  | TGTGGGTC   | AGGATG  | CATT  | 21 |
+
+
+Sample Name will use to identify files and folder, need to be unique. In the case, there is not a secondary barcode or constant regions; it is needed to add a dash '-' to the empty field.
+
+The easiest way to do it is to create an excel file with all barcodes with the latter format and run the barcode utility to generate the text file. By default, the utility will make an individual file for a sample. This behaviour is intended to embarrassing parallelize the demultiplexing process by running an independent process over the same raw data but can be modified. If you need another approach, please check the input parameters of both demultiplex and barcode utilities. 
+
+
+**Running multiple demultiplex process and Trimming**
+
+The idea is to submit multiple jobs, each with an individual sample, in an HPC environment with SLURM.
+
+
+```bash
+for i in *.barcode;do sbatch --partiotion=cpu --mem=4G --wrap="demultiplexer -i Lane1_S1_L001_R1_001.fastq.gz  Lane2_S2_L002_R1_001.fastq.gz Lane3_S3_L003_R1_001.fastq.gz Lane4_S4_L004_R1_001.fastq.gz -b ${i} -m quick -o my_folder_demultiplex_data";done
+```
+
+If you run the pipeline in a local machine with multiple cores (i.e 8), you can run multiple instances of the demultiplexer too. 
+
+```bash
+parallel -j 8  demultiplexer -i Lane1_S1_L001_R1_001.fastq.gz  Lane2_S2_L002_R1_001.fastq.gz Lane3_S3_L003_R1_001.fastq.gz Lane4_S4_L004_R1_001.fastq.gz -b {} -m quick -o my_folder_demultiplex_data ::: *.barcode
+```
+
+The output of this step is a folder with the name of the sample and within one or multiple Fastq files.  The number on the file shows the length of the design region, this is important when there are multiple design regions, or we allow for insertion and deletions in the design region and run demultiplexing with the dynamic method. 
+
+There is a folder named Stats that contains counting of sequences for each level of match, barcode, barcode and the constant region, design region length, etc. This log can help to detect insertions and deletions in barcodes, or other errors. I recommend checking the file after the job is done. Next, we need to trim the design regions from the demultiplexed sequences. This extra step is a separate of demultiplexing to help to debug potential problems and avoid to demultiplex multiple times with different paraments.  However, everything can be packed in a single job. 
+
+```bash
+for i in *.barcode;do trimer -d ./my_folder_demultiplex_data/ -b ${i}; done
+```
+
+Finally, depending on the type of screening and analysis, you want to do different counting, take a look at pipelines and counter_reads_entropy.py  and counter_reads.py . 
+
+**Mapping to a library**
+
+There are multiple approaches to remove sequences not present in the designed library. One approach is to use [Bowtie](http://bowtie-bio.sourceforge.net/manual.shtml).  Set up the parameters according to your needs. 
+
+
+```bash
+bowtie --best -v 0 ../../Libs/disdlib_4_endomembrane_system -f Disorderome_lib_naive_4.fasta > ./bowtie/Disorderome_lib_naive_4.out
+```
+
+You can parse bowtie output using counter_map_reads.py  or any other custom tool. 
 
 
 
