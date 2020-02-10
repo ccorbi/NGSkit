@@ -59,26 +59,44 @@ demultiplexer  -b [BarCode_file.inp] -i [deep_seq_file.fastq] -o [folder_name] -
 
 optional arguments:
   -h, --help            show this help message and exit
+  
   -i INPUT_FASTQS [INPUT_FASTQS ...], --input_fastqs INPUT_FASTQS [INPUT_FASTQS ...]
                         input_fastqs FASTQ file or files (demultiplex)
+
   -b BARCODE_FILE, --barcode_file BARCODE_FILE
                         File that contains barcodes and cosntant regions
+
   -o OUT_DIR, --out_dir OUT_DIR
                         Output folder, called demultiplex by default
-  -m {quick,standard,simple,dynamic}, --demultiplexation_method {quick,standard,simple,dynamic}
+
+  -m, --demultiplexation_method {quick,standard,simple,dynamic}
                         Type of demultiplexation by default; STANDARD `quick`:
                         Only the first barcode and constant region will be
                         check `standard`: Both barcodes and constant regions
                         will be check `simple`: Only the barcodes are used
                         `dynamic`: frame shift search, Flexible search of the
                         second constant region and barcode
+
   --misreads_cutoff_cons MISREADS_CUTOFF_CONS
                         Max number of misreading allowed in the constant
                         constant_region (default 2)
+
   --misreads_cutoff_barcode MISREADS_CUTOFF_BARCODE
                         Max number of misreading allowed in the constant
                         constant_region (default 1)
+
+  --late_end LATE_END   Number of positions to keep looking for the 2nd
+                        constant region after the target lenght. Useful to
+                        skip stop codons, or insertions in the designed Seq.
+                        Only applys on dynamic method
+
+  --early_end EARLY_END
+                        Number of positions to start looking for the 2nd
+                        constant. Uset when there are deletions in the
+                        designed seq. Only applys on dynamic method
+
   --dump                Dump constant regions
+
   --no-save_frequencies
                         Do not Save match frequencies
 ```
@@ -173,7 +191,7 @@ Before demultiplexing, we need to create a text file with the information of eac
 Sample name will be use to identify files and folders,so need to be unique  and spaces in the name are not allowed. In the case, there is not a secondary barcode or constant regions; it is needed to add a dash '-' to the empty field. All the barcodes need to be in 5` -> 3'.
 
 ```bash
-barcodes -b PDZ_illumina.xlsx -o test_PDZ
+barcodes -b PDZ_illumina.xlsx -o test_PDZ --skip_header
 ```
 
 The easiest way to do it is to create an excel file with all barcodes with the latter format and run the barcode utility to generate the text file. By default, the utility will make an individual file for a sample. This behaviour is intended to embarrassing parallelize the demultiplexing process by running an independent process over the same raw data but can be modified. If you need another approach, please check the input parameters of both demultiplex and barcode utilities. 

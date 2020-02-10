@@ -205,8 +205,8 @@ class Demultiplexation_method(object):
         
         self.cutoff_barcode = options.get('misreads_cutoff_barcode', 1)
         self.cutoff_cons = options.get('misreads_cutoff_cons', 1)
-        self.further_end = options.get('further_end', 10)
-        self.closer_end = options.get('closer_end', 10)
+        self.late_end = options.get('late_end', 10)
+        self.early_end = options.get('early_end', 10)
         
 
  
@@ -359,7 +359,7 @@ class Demultiplexation_method(object):
             sequence
         barcode : object
             barcode object with demultiplexation information
-        further_end : int
+        late_end : int
             How many up stream over the theorical end of the target position
             should I look for the second constant region
 
@@ -378,7 +378,7 @@ class Demultiplexation_method(object):
             # it will check
             # (insertions)
             
-            #further_end = self.further_end + barcode.trgt_len
+            #late_end = self.late_end + barcode.trgt_len
 
             target_lens = self._generate_lens(barcode)
             
@@ -428,8 +428,8 @@ class Demultiplexation_method(object):
 
     def _generate_lens(self, barcode):
 
-        rear =  [i for i in range(barcode.trgt_len - self.closer_end, barcode.trgt_len)]
-        forward = [i for i in range(barcode.trgt_len, self.further_end + barcode.trgt_len)]
+        rear =  [i for i in range(barcode.trgt_len - self.early_end, barcode.trgt_len)]
+        forward = [i for i in range(barcode.trgt_len, self.late_end + barcode.trgt_len)]
         rear = rear[::-1]
         target_lens = [0]
         iter_ = max([len(rear), len(forward)])
@@ -711,11 +711,19 @@ def get_options():
                         help='Max number of misreading allowed in the constant \
                         constant_region  (default 1)')
 
-    parser.add_argument('--further_end', action="store",
-                        dest="further_end", default=10, type=int,
+    parser.add_argument('--late_end', action="store",
+                        dest="late_end", default=6, type=int,
                         help='Number of positions to keep looking \
                         for the 2nd constant region after the target lenght. \
+                        Useful to skip stop codons, or insertions in the designed Seq. \
                         Only applys on dynamic method')
+
+    parser.add_argument('--early_end', action="store",
+                        dest="early_end", default=10, type=int,
+                        help='Number of positions to start looking \
+                        for the 2nd constant. Uset when there are deletions in the designed seq. \
+                        Only applys on dynamic method')
+
 
     parser.add_argument('--dump', help='Dump constant regions', dest='dump',
                         default=False, action='store_true')
