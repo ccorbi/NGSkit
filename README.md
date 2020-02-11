@@ -59,7 +59,7 @@ demultiplexer  -b [BarCode_file.inp] -i [deep_seq_file.fastq] -o [folder_name] -
 
 optional arguments:
   -h, --help            show this help message and exit
-  
+
   -i INPUT_FASTQS [INPUT_FASTQS ...], --input_fastqs INPUT_FASTQS [INPUT_FASTQS ...]
                         input_fastqs FASTQ file or files (demultiplex)
 
@@ -110,21 +110,28 @@ trimmer  -d [demultiplexedFolder]-b [BarCode_file.inp] -q [Quality threshold] -m
 
 optional arguments:
   -h, --help            show this help message and exit
+
   -d INPUT_FOLDER, --input_folder INPUT_FOLDER
                         Folder contains demultiplexed folders and files
+                    
   -b BARCODE_FILE, --barcode_file BARCODE_FILE
                         File that contains barcodes and cosntant regions
+
   -o OUT_FOLDER, --out_folder OUT_FOLDER
                         Output folder, called Sequences by default
+
   -m {standard,dynamic}, --trimming_method {standard,dynamic}
                         standard Trimm sequences according barcode file
                         configuration, ignores float window output files
                         dynamic Trimm sequences using file lenght label, or
                         output of float window demultiplex
+
   -q QUALITY, --quality QUALITY
                         Quality reading threshold (default 30)
+
   --output_fmt OUTPUT_FMT
                         Output format, default fasta
+
   --force-lenght FORCE_LENGHT
                         force a lenght and ignore file label, overwrites
                         dynamic option
@@ -144,12 +151,17 @@ Barcodes tool Usage : %prog -b [BarCode_file.excel] -o [to_demultiplex_]
 
 optional arguments:
   -h, --help            show this help message and exit
+
   -b BARCODE_FILE, --barcode_file BARCODE_FILE
                         File that contains barcodes and cosntant regions
+
   -o OUT_PREFIX, --out_prefix OUT_PREFIX
                         Output prefix name to_demultiplex by default
+
   --rc_b2               Reverse and Complemete barcode 2
+
   --rc_c2               Reverse and Complemete Constant region 2
+  
   --skip_header         Input file has a header, skip it
 ```
 

@@ -428,7 +428,7 @@ class Demultiplexation_method(object):
 
     def _generate_lens(self, barcode):
 
-        rear =  [i for i in range(barcode.trgt_len - self.early_end, barcode.trgt_len)]
+        rear =  [i for i in range(self.early_end, barcode.trgt_len)]
         forward = [i for i in range(barcode.trgt_len, self.late_end + barcode.trgt_len)]
         rear = rear[::-1]
         target_lens = [0]
