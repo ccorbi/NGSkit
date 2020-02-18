@@ -161,7 +161,7 @@ optional arguments:
   --rc_b2               Reverse and Complemete barcode 2
 
   --rc_c2               Reverse and Complemete Constant region 2
-  
+
   --skip_header         Input file has a header, skip it
 ```
 
@@ -179,8 +179,8 @@ This module contains functions and tools to translate a library of peptides or p
 
 **Barcodes and QC**
 
-Before running the entire pipeline, it is strongly recommended to check the quality of the raw data. It is planned to incorporate this functionality in demultiplexing utility, but in the meantime, you can use a third-party tool. There are many tools to get a report on your file. For instance [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
-Also, determine is you need to stitch both reverse and forward Fastq files. This is not yet implemented, but again you can use a tool like [Pandaseq](https://github.com/neufeld/pandaseq). 
+Before running the entire pipeline, it is strongly recommended to check the quality of the raw data. It is planned to incorporate this functionality in demultiplexing utility, but in the meantime, you can use a third-party tool. There are many tools to get a report on your file. For instance [FASTQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).
+Among other issues, the QC analysis will help you to determine if stitching is required. This is not yet implemented, but again you can use one of the many tools to do it, like [Pandaseq](https://github.com/neufeld/pandaseq). 
 
 - *Example pandaseq*
 
@@ -188,6 +188,8 @@ Also, determine is you need to stitch both reverse and forward Fastq files. This
 
 pandaseq  -f lab_S1_R1_001.fastq.gz -r lab_S1_R2_001.fastq.gz -A ea_util  -F -w merged_file_20180303.fastq -l merge.log 
 ```
+
+Different samples may need different parameters, be aware of the error and warning messages and adjust the tools settings accordantly. 
 
  - *Example barcode file*
   

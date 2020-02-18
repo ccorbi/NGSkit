@@ -197,7 +197,7 @@ def clean_restriction_sites(naseq, flank1='', flank2='', dict_restriction=['GAAT
         else:
             naseq = reshufle_seq(naseq, matches)
 
-        if ilimit == 1000000:
+        if ilimit == 10000:
             raise StopIteration('WARNING the iteration limit has been pass\
                                 but the seq {} stil contain a restriction \
                                 site {},{} for {}'.format(naseq,

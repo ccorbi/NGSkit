@@ -390,8 +390,8 @@ class Demultiplexation_method(object):
             # and end  a bit further (insertions)
             for var_target_len in target_lens:
 
-                if var_target_len + barcode.b1_len + barcode.c1_len > len(read_seq):
-                    return read_map
+                if  barcode.b1_len + barcode.c1_len + var_target_len + barcode.c2_len + barcode.b2_len > len(read_seq):
+                    continue
 
                 # extract constant region 2, using float window
                 dynamic_cons2 = read_seq[barcode.b1_len + barcode.c1_len +
@@ -712,14 +712,14 @@ def get_options():
                         constant_region  (default 1)')
 
     parser.add_argument('--late_end', action="store",
-                        dest="late_end", default=6, type=int,
+                        dest="late_end", type=int,
                         help='Number of positions to keep looking \
                         for the 2nd constant region after the target lenght. \
                         Useful to skip stop codons, or insertions in the designed Seq. \
                         Only applys on dynamic method')
 
     parser.add_argument('--early_end', action="store",
-                        dest="early_end", default=10, type=int,
+                        dest="early_end",  type=int,
                         help='Number of positions to start looking \
                         for the 2nd constant. Uset when there are deletions in the designed seq. \
                         Only applys on dynamic method')
@@ -782,11 +782,18 @@ def main():
     logger.info('Method: {}'.format(opts.dpx_method))
     logger.info('FastQ: {}'.format(opts.input_fastqs))
     logger.info('Barcode: {}'.format(opts.barcode_file))
-    # logger.info('Target: {}'.format(opts.target_len))
+    
+    if opts.dpx_method == 'dynamic':
+        logger.info('Dynamic second constant region:')
+        logger.info('Searching from: {}'.format(opts.early_end))
+        logger.info('Searching to: +{}'.format(opts.late_end))
+
+
 
     logger.info('Misreadings_Barcode: {}'.format(opts.misreads_cutoff_barcode))
     logger.info('Misreadings_Constant: {}'.format(opts.misreads_cutoff_cons))
     logger.info('Stats: {}'.format(opts.save_frequencies))
+
 
     # Call to the action
     fastqs = opts.input_fastqs
