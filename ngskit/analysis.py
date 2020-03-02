@@ -155,11 +155,41 @@ def binding_score(seq, pwm):
 
     """
 
+
     score = list()
     for pos, symbol in enumerate(seq):
         score.append(pwm.at[symbol, pos])
 
     return sum(score)
+
+def scan_binding_score(seq, pwm):
+    """Score a sequence using a PWM.
+
+    Parameters
+    ----------
+    seq: str
+
+    pwm: Pandas.DataFrame
+
+    Returns
+    -------
+
+    dict {seq:score}
+
+    """
+    # target seq need to be equal or larger than the motif
+    assert len(seq) >= pwm.shape[1]
+    
+    motif_len = pwm.shape[1]
+
+    score = dict()
+    for pos in range(0,len(seq)-motif_len+1):
+        s = seq[pos:pos+motif_len]
+        score[s] = binding_score(s, pwm)
+
+    return score
+
+
 
 def dist_PWM(pwm1, pwm2):
     """Euclidina distance between PWM.
